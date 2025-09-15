@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CalendarDays, AlertTriangle, Info } from 'lucide-react';
+import { Calendar, AlertTriangle, Info } from 'lucide-react';
 import { mockData } from '@/data/mockData';
 import { ConflictoInfo } from '@/types/roadmap';
 
@@ -22,7 +22,7 @@ export function CalendarView() {
   const categorias = ['Todos', ...mockData.categorias.map(c => c.nome)];
 
   // Função para gerar os dias do mês
-  const generateCalendarDays = () => {
+  const generateTimelineDays = () => {
     const monthMap: { [key: string]: { year: number; month: number } } = {
       'Julho 2025': { year: 2025, month: 6 },
       'Agosto 2025': { year: 2025, month: 7 },
@@ -38,7 +38,7 @@ export function CalendarView() {
   };
 
   // Função para verificar conflitos
-  const checkConflicts = (day: number): ConflictoInfo => {
+  const checkConflicts = (day: number, pessoa: string): ConflictoInfo => {
     const { year, month } = {
       'Julho 2025': { year: 2025, month: 6 },
       'Agosto 2025': { year: 2025, month: 7 },
@@ -55,9 +55,10 @@ export function CalendarView() {
       targetDate >= marco.dataInicio && targetDate <= (marco.dataFim || marco.dataInicio)
     );
 
-    // Verificar comunicações existentes
+    // Verificar comunicações existentes para a pessoa específica
     const comunicacoesDoDay = mockData.comunicacoes.filter(comm => 
-      comm.dataInicio === targetDate && comm.ativo
+      comm.dataInicio === targetDate && comm.ativo && 
+      (pessoa === 'Todos' || comm.pessoa === pessoa)
     );
 
     const temConflito = marcosDoDay.some(marco => 
@@ -96,7 +97,34 @@ export function CalendarView() {
     return dayOfWeek === 0 || dayOfWeek === 6;
   };
 
-  const days = generateCalendarDays();
+  const days = generateTimelineDays();
+  const filteredPessoas = filters.pessoa === 'Todos' ? mockData.pessoas : [filters.pessoa];
+
+  // Função para obter marcos que se estendem por múltiplos dias
+  const getMarcoSpan = (marco: any, day: number) => {
+    const { year, month } = {
+      'Julho 2025': { year: 2025, month: 6 },
+      'Agosto 2025': { year: 2025, month: 7 },
+      'Setembro 2025': { year: 2025, month: 8 },
+      'Outubro 2025': { year: 2025, month: 9 },
+      'Novembro 2025': { year: 2025, month: 10 },
+      'Dezembro 2025': { year: 2025, month: 11 }
+    }[selectedMonth];
+
+    const startDate = new Date(marco.dataInicio);
+    const endDate = new Date(marco.dataFim || marco.dataInicio);
+    const currentDate = new Date(year, month, day);
+
+    if (currentDate >= startDate && currentDate <= endDate) {
+      // Calcular quantos dias o marco se estende a partir deste dia
+      const remainingDays = Math.min(
+        Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+        days.length - day + 1
+      );
+      return remainingDays > 1 ? remainingDays : 1;
+    }
+    return 0;
+  };
 
   return (
     <TooltipProvider>
@@ -105,7 +133,7 @@ export function CalendarView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5" />
+              <Calendar className="h-5 w-5" />
               Filtros do Roadmap
             </CardTitle>
           </CardHeader>
@@ -177,7 +205,7 @@ export function CalendarView() {
                   <Badge variant="outline" className="border-green-500 text-green-700">
                     Dia Disponível
                   </Badge>
-                  <Badge variant="outline" className="border-yellow-500 text-yellow-700">
+                  <Badge variant="outline" className="border-blue-500 text-blue-700">
                     Marco Acadêmico
                   </Badge>
                   <Badge variant="outline" className="border-red-500 text-red-700">
@@ -192,117 +220,166 @@ export function CalendarView() {
           </CardContent>
         </Card>
 
-        {/* Calendário */}
+        {/* Roadmap Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Calendário de {selectedMonth}</CardTitle>
+            <CardTitle>Roadmap de {selectedMonth}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-2">
-              {/* Cabeçalho dos dias da semana */}
-              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(dia => (
-                <div key={dia} className="p-2 text-center font-medium text-muted-foreground border-b">
-                  {dia}
+            <div className="overflow-x-auto">
+              <div className="min-w-[800px]">
+                {/* Header com os dias */}
+                <div className="grid grid-cols-[200px_1fr] gap-0 mb-4">
+                  <div className="bg-muted p-2 font-medium border">
+                    MOMENTO ACADÊMICO
+                  </div>
+                  <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
+                    {days.map(day => (
+                      <div key={day} className={`p-2 text-center text-xs font-medium border ${isWeekend(day) ? 'bg-gray-100 text-gray-500' : 'bg-background'}`}>
+                        {day}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-              
-              {/* Dias do mês */}
-              {days.map(day => {
-                const conflictInfo = checkConflicts(day);
-                const weekend = isWeekend(day);
-                const hasMarcos = conflictInfo.marcos.length > 0;
-                const hasCommunications = conflictInfo.comunicacoes.length > 0;
-                const available = !weekend && !hasCommunications;
 
-                return (
-                  <Tooltip key={day}>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className={`
-                          relative p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md min-h-[80px]
-                          ${weekend ? 'bg-gray-100 text-gray-500' : ''}
-                          ${available ? 'bg-green-50 border-green-200 hover:bg-green-100' : ''}
-                          ${hasMarcos ? 'bg-yellow-50 border-yellow-200' : ''}
-                          ${conflictInfo.temConflito ? 'bg-red-50 border-red-200' : ''}
-                        `}
-                      >
-                        <div className="font-medium text-sm">{day}</div>
-                        
-                        {/* Indicadores de marcos */}
-                        {conflictInfo.marcos.map((marco, index) => (
-                          <div 
-                            key={marco.id}
-                            className="w-full h-1 rounded mt-1"
-                            style={{ backgroundColor: marco.cor }}
-                          />
-                        ))}
+                {/* Marcos Acadêmicos */}
+                <div className="grid grid-cols-[200px_1fr] gap-0 mb-4">
+                  <div className="bg-blue-50 p-2 font-medium border text-blue-700">
+                    MARCOS
+                  </div>
+                  <div className="grid gap-0 relative" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
+                    {days.map(day => {
+                      const conflictInfo = checkConflicts(day, 'Todos');
+                      const marco = conflictInfo.marcos[0]; // Pegar o primeiro marco se houver
+                      const span = marco ? getMarcoSpan(marco, day) : 0;
+                      
+                      return (
+                        <div key={day} className="border border-gray-200 min-h-[40px] relative">
+                          {marco && span > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="absolute top-1 left-1 right-1 h-6 rounded text-white text-xs flex items-center justify-center font-medium cursor-pointer"
+                                  style={{ 
+                                    backgroundColor: marco.cor,
+                                    width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)'
+                                  }}
+                                >
+                                  {marco.nome}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="space-y-1">
+                                  <div className="font-medium">{marco.nome}</div>
+                                  <div className="text-sm">
+                                    {marco.modalidade} - {marco.maturidade}
+                                  </div>
+                                  <div className="text-sm">
+                                    {marco.dataInicio} {marco.dataFim && marco.dataFim !== marco.dataInicio && `até ${marco.dataFim}`}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                        {/* Indicadores de comunicações */}
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {conflictInfo.comunicacoes.map(comm => {
-                            const persona = mockData.personas.find(p => p.nome === comm.persona);
-                            return (
-                              <div
-                                key={comm.id}
-                                className="w-3 h-3 rounded-full text-[8px] flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: persona?.cor || '#666' }}
+                {/* Pessoas */}
+                {filteredPessoas.map(pessoa => (
+                  <div key={pessoa} className="grid grid-cols-[200px_1fr] gap-0">
+                    <div className="bg-red-50 p-2 font-medium border text-red-700">
+                      {pessoa}
+                    </div>
+                    <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
+                      {days.map(day => {
+                        const conflictInfo = checkConflicts(day, pessoa);
+                        const comunicacao = conflictInfo.comunicacoes[0];
+                        const weekend = isWeekend(day);
+                        const hasMarcos = conflictInfo.marcos.length > 0;
+                        const available = !weekend && !comunicacao;
+
+                        return (
+                          <Tooltip key={day}>
+                            <TooltipTrigger asChild>
+                              <div 
+                                className={`
+                                  border border-gray-200 min-h-[40px] p-1 cursor-pointer relative
+                                  ${weekend ? 'bg-gray-100' : ''}
+                                  ${available ? 'hover:bg-green-50' : ''}
+                                `}
                               >
-                                {comm.pessoa.charAt(0)}
+                                {comunicacao && (
+                                  <div
+                                    className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                                    style={{ backgroundColor: mockData.personas.find(p => p.nome === comunicacao.persona)?.cor || '#666' }}
+                                  >
+                                    {comunicacao.pessoa.charAt(0)}
+                                  </div>
+                                )}
+
+                                {conflictInfo.temConflito && (
+                                  <AlertTriangle className="absolute top-1 right-1 h-3 w-3 text-red-500" />
+                                )}
+
+                                {available && !hasMarcos && (
+                                  <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
+                                )}
                               </div>
-                            );
-                          })}
-                        </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <div className="space-y-2">
+                                <div className="font-medium">
+                                  {pessoa} - Dia {day}
+                                </div>
+                                
+                                {weekend && (
+                                  <div className="text-sm text-gray-600">Fim de semana</div>
+                                )}
 
-                        {/* Indicador de conflito */}
-                        {conflictInfo.temConflito && (
-                          <AlertTriangle className="absolute top-1 right-1 h-4 w-4 text-red-500" />
-                        )}
+                                {conflictInfo.marcos.length > 0 && (
+                                  <div>
+                                    <div className="font-medium text-blue-600">Marcos Acadêmicos:</div>
+                                    {conflictInfo.marcos.map(marco => (
+                                      <div key={marco.id} className="text-sm">
+                                        • {marco.nome} ({marco.modalidade} - {marco.maturidade})
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
-                        {/* Indicador de dia disponível */}
-                        {available && (
-                          <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <div className="space-y-2">
-                        <div className="font-medium">
-                          Dia {day} - {weekend ? 'Fim de Semana' : available ? 'Disponível' : 'Ocupado'}
-                        </div>
-                        
-                        {conflictInfo.marcos.length > 0 && (
-                          <div>
-                            <div className="font-medium text-yellow-600">Marcos Acadêmicos:</div>
-                            {conflictInfo.marcos.map(marco => (
-                              <div key={marco.id} className="text-sm">
-                                • {marco.nome} ({marco.modalidade} - {marco.maturidade})
+                                {comunicacao && (
+                                  <div>
+                                    <div className="font-medium text-green-600">Comunicação:</div>
+                                    <div className="text-sm">
+                                      • {comunicacao.nomeAcao} - {comunicacao.persona}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {conflictInfo.recomendacao && (
+                                  <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
+                                    <Info className="inline h-3 w-3 mr-1" />
+                                    {conflictInfo.recomendacao}
+                                  </div>
+                                )}
+
+                                {available && !hasMarcos && (
+                                  <div className="text-sm text-green-600">
+                                    ✓ Dia disponível para comunicação
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {conflictInfo.comunicacoes.length > 0 && (
-                          <div>
-                            <div className="font-medium text-blue-600">Comunicações:</div>
-                            {conflictInfo.comunicacoes.map(comm => (
-                              <div key={comm.id} className="text-sm">
-                                • {comm.nomeAcao} ({comm.pessoa} - {comm.persona})
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {conflictInfo.recomendacao && (
-                          <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
-                            <Info className="inline h-3 w-3 mr-1" />
-                            {conflictInfo.recomendacao}
-                          </div>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -315,7 +392,12 @@ export function CalendarView() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               {days
-                .filter(day => !isWeekend(day) && checkConflicts(day).comunicacoes.length === 0)
+                .filter(day => {
+                  const hasComm = filteredPessoas.some(pessoa => 
+                    checkConflicts(day, pessoa).comunicacoes.length > 0
+                  );
+                  return !isWeekend(day) && !hasComm;
+                })
                 .slice(0, 10)
                 .map(day => (
                   <Badge key={day} variant="outline" className="p-2 justify-center border-green-500 text-green-700">

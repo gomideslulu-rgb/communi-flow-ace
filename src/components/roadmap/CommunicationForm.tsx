@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, X, AlertTriangle, Info } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { mockData } from '@/data/mockData';
 import { Comunicacao } from '@/types/roadmap';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +30,7 @@ export function CommunicationForm() {
   });
 
   const [customRepique, setCustomRepique] = useState('');
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,17 +48,44 @@ export function CommunicationForm() {
     const conflictInfo = checkDateConflicts(formData.dataInicio!);
     
     if (conflictInfo.temConflito) {
-      toast({
-        title: "⚠️ Conflito Identificado",
-        description: conflictInfo.recomendacao,
-        variant: "destructive"
-      });
+      setConflictDialogOpen(true);
       return;
     }
 
+    saveCommuication();
+  };
+
+  const saveCommuication = () => {
+    // Verificar se já existe comunicação no mesmo dia para a mesma pessoa
+    const comunicacoesNoMesmoDia = mockData.comunicacoes.filter(comm => 
+      comm.dataInicio === formData.dataInicio && 
+      comm.pessoa === formData.pessoa &&
+      comm.ativo
+    );
+
+    // Adicionar a nova comunicação (em uma implementação real, seria salvo no backend)
+    const novaComunicacao: Comunicacao = {
+      id: Date.now().toString(),
+      pessoa: formData.pessoa!,
+      nomeAcao: formData.nomeAcao || 'Comunicação',
+      categoria: formData.categoria!,
+      instituicao: formData.instituicao!,
+      persona: formData.persona!,
+      tipoDisparo: formData.tipoDisparo!,
+      dataInicio: formData.dataInicio!,
+      dataFim: formData.dataFim,
+      canais: formData.canais || [],
+      repiques: formData.repiques,
+      ativo: true
+    };
+
+    mockData.comunicacoes.push(novaComunicacao);
+
     toast({
       title: "Comunicação cadastrada",
-      description: "A comunicação foi adicionada ao roadmap com sucesso",
+      description: comunicacoesNoMesmoDia.length > 0 
+        ? `Comunicação adicionada. Atenção: ${comunicacoesNoMesmoDia.length + 1} comunicações no mesmo dia.`
+        : "A comunicação foi adicionada ao roadmap com sucesso",
     });
 
     // Reset form
@@ -73,6 +102,7 @@ export function CommunicationForm() {
       repiques: [],
       ativo: true
     });
+    setConflictDialogOpen(false);
   };
 
   const checkDateConflicts = (data: string) => {
@@ -354,21 +384,60 @@ export function CommunicationForm() {
               <Button 
                 type="submit" 
                 className="min-w-[200px]"
-                disabled={conflictInfo?.temConflito}
               >
-                {conflictInfo?.temConflito ? (
-                  <>
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Conflito Identificado
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Cadastrar Comunicação
-                  </>
-                )}
+                <Plus className="h-4 w-4 mr-2" />
+                Cadastrar Comunicação
               </Button>
             </div>
+
+            {/* Dialog de Conflito */}
+            <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    Conflito Identificado
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <div>
+                      Foi identificado um conflito com as regras de negócio para a data selecionada:
+                    </div>
+                    
+                    {conflictInfo?.marcos && conflictInfo.marcos.length > 0 && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        <div className="font-medium text-blue-700 mb-2">Marcos Acadêmicos na data:</div>
+                        {conflictInfo.marcos.map(marco => (
+                          <div key={marco.id} className="text-sm text-blue-600">
+                            • {marco.nome} ({marco.modalidade} - {marco.maturidade})
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {conflictInfo?.recomendacao && (
+                      <div className="p-3 bg-orange-50 border border-orange-200 rounded">
+                        <div className="flex items-start gap-2">
+                          <Info className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-orange-700">
+                            {conflictInfo.recomendacao}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-gray-600">
+                      Deseja prosseguir com o cadastro mesmo assim?
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={saveCommuication} className="bg-red-600 hover:bg-red-700">
+                    Sim, Cadastrar Mesmo Assim
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </form>
         </CardContent>
       </div>

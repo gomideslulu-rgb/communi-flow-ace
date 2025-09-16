@@ -301,10 +301,10 @@ export function CalendarView() {
                     <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
                       {days.map(day => {
                         const conflictInfo = checkConflicts(day, pessoa);
-                        const comunicacao = conflictInfo.comunicacoes[0];
+                        const comunicacoes = conflictInfo.comunicacoes;
                         const weekend = isWeekend(day);
                         const hasMarcos = conflictInfo.marcos.length > 0;
-                        const available = !weekend && !comunicacao;
+                        const available = !weekend && comunicacoes.length === 0;
 
                         return (
                           <Tooltip key={day}>
@@ -316,12 +316,22 @@ export function CalendarView() {
                                   ${available ? 'hover:bg-green-50' : ''}
                                 `}
                               >
-                                {comunicacao && (
-                                  <div
-                                    className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-                                    style={{ backgroundColor: mockData.personas.find(p => p.nome === comunicacao.persona)?.cor || '#666' }}
-                                  >
-                                    {comunicacao.pessoa.charAt(0)}
+                                {conflictInfo.comunicacoes.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => (
+                                      <div
+                                        key={comunicacao.id}
+                                        className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold relative"
+                                        style={{ backgroundColor: mockData.personas.find(p => p.nome === comunicacao.persona)?.cor || '#666' }}
+                                      >
+                                        {comunicacao.pessoa.charAt(0)}
+                                        {conflictInfo.comunicacoes.length > 1 && index === 0 && (
+                                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
+                                            {conflictInfo.comunicacoes.length}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 )}
 
@@ -355,12 +365,21 @@ export function CalendarView() {
                                   </div>
                                 )}
 
-                                {comunicacao && (
+                                {conflictInfo.comunicacoes.length > 0 && (
                                   <div>
-                                    <div className="font-medium text-green-600">Comunicação:</div>
-                                    <div className="text-sm">
-                                      • {comunicacao.nomeAcao} - {comunicacao.persona}
+                                    <div className="font-medium text-green-600">
+                                      Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
                                     </div>
+                                    {conflictInfo.comunicacoes.map(comunicacao => (
+                                      <div key={comunicacao.id} className="text-sm">
+                                        • {comunicacao.nomeAcao} - {comunicacao.persona} ({comunicacao.pessoa})
+                                      </div>
+                                    ))}
+                                    {conflictInfo.comunicacoes.length > 1 && (
+                                      <div className="text-xs text-orange-600 mt-1">
+                                        ⚠️ Múltiplas comunicações no mesmo dia
+                                      </div>
+                                    )}
                                   </div>
                                 )}
 

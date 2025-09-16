@@ -230,12 +230,12 @@ export function CalendarView() {
               <div className="min-w-[800px]">
                 {/* Header com os dias */}
                 <div className="grid grid-cols-[200px_1fr] gap-0 mb-4">
-                  <div className="bg-muted p-2 font-medium border">
+                  <div className="bg-muted p-2 font-medium">
                     MOMENTO ACADÊMICO
                   </div>
                   <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
                     {days.map(day => (
-                      <div key={day} className={`p-2 text-center text-xs font-medium border ${isWeekend(day) ? 'bg-gray-100 text-gray-500' : 'bg-background'}`}>
+                      <div key={day} className={`p-2 text-center text-xs font-medium ${isWeekend(day) ? 'bg-gray-100 text-gray-500' : 'bg-background'}`}>
                         {day}
                       </div>
                     ))}
@@ -244,16 +244,19 @@ export function CalendarView() {
 
                 {/* Marcos Acadêmicos */}
                 <div className="grid grid-cols-[200px_1fr] gap-0 mb-4">
-                  <div className="bg-blue-50 p-2 font-medium border text-blue-700">
+                  <div className="bg-blue-50 p-2 font-medium text-blue-700">
                     MARCOS
                   </div>
-                  <div className="grid gap-0 relative" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`, minHeight: '60px' }}>
+                  <div className="grid gap-0 relative" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
                     {days.map(day => {
                       const conflictInfo = checkConflicts(day, 'Todos');
                       const marcos = conflictInfo.marcos;
                       
+                      // Calculate minimum height needed for all marcos
+                      const minHeight = Math.max(60, marcos.length * 24 + 8);
+                      
                       return (
-                        <div key={day} className="border border-gray-200 min-h-[60px] relative">
+                        <div key={day} className="relative" style={{ minHeight: `${minHeight}px` }}>
                           {marcos.map((marco, index) => {
                             const span = getMarcoSpan(marco, day);
                             if (span <= 0) return null;
@@ -266,7 +269,7 @@ export function CalendarView() {
                                     style={{ 
                                       backgroundColor: marco.cor,
                                       width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)',
-                                      top: `${2 + (index * 22)}px`
+                                      top: `${4 + (index * 24)}px`
                                     }}
                                   >
                                     {marco.nome}
@@ -295,7 +298,7 @@ export function CalendarView() {
                 {/* Pessoas */}
                 {filteredPessoas.map(pessoa => (
                   <div key={pessoa} className="grid grid-cols-[200px_1fr] gap-0">
-                    <div className="bg-red-50 p-2 font-medium border text-red-700">
+                    <div className="bg-red-50 p-2 font-medium text-red-700">
                       {pessoa}
                     </div>
                     <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
@@ -311,7 +314,7 @@ export function CalendarView() {
                             <TooltipTrigger asChild>
                               <div 
                                 className={`
-                                  border border-gray-200 min-h-[40px] p-1 cursor-pointer relative
+                                  min-h-[40px] p-1 cursor-pointer relative
                                   ${weekend ? 'bg-gray-100' : ''}
                                   ${available ? 'hover:bg-green-50' : ''}
                                 `}
@@ -446,7 +449,6 @@ export function CalendarView() {
                   );
                   return !isWeekend(day) && !hasComm;
                 })
-                .slice(0, 10)
                 .map(day => (
                   <Badge key={day} variant="outline" className="p-2 justify-center border-green-500 text-green-700">
                     Dia {day}

@@ -316,6 +316,7 @@ export function CalendarView() {
                                   ${available ? 'hover:bg-green-50' : ''}
                                 `}
                               >
+                                {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
                                     {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => (
@@ -331,6 +332,20 @@ export function CalendarView() {
                                           </div>
                                         )}
                                       </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Marcos Acadêmicos - posicionados abaixo das comunicações */}
+                                {hasMarcos && (
+                                  <div className={`absolute bottom-1 left-1 right-1 ${conflictInfo.comunicacoes.length > 0 ? 'top-8' : 'top-1'}`}>
+                                    {conflictInfo.marcos.slice(0, 2).map((marco, index) => (
+                                      <div
+                                        key={marco.id}
+                                        className="h-1 rounded mb-0.5"
+                                        style={{ backgroundColor: marco.cor }}
+                                        title={marco.nome}
+                                      />
                                     ))}
                                   </div>
                                 )}
@@ -354,6 +369,33 @@ export function CalendarView() {
                                   <div className="text-sm text-gray-600">Fim de semana</div>
                                 )}
 
+                                {conflictInfo.comunicacoes.length > 0 && (
+                                  <div>
+                                    <div className="font-medium text-green-600">
+                                      Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
+                                    </div>
+                                    {conflictInfo.comunicacoes.map(comunicacao => (
+                                      <div key={comunicacao.id} className="text-sm space-y-1">
+                                        <div>• <strong>{comunicacao.nomeAcao}</strong></div>
+                                        <div className="text-xs text-gray-600 ml-2">
+                                          Persona: {comunicacao.persona}<br/>
+                                          Categoria: {comunicacao.categoria}<br/>
+                                          Instituição: {comunicacao.instituicao}<br/>
+                                          Tipo: {comunicacao.tipoDisparo}
+                                          {comunicacao.canais.length > 0 && (
+                                            <><br/>Canais: {comunicacao.canais.join(', ')}</>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {conflictInfo.comunicacoes.length > 1 && (
+                                      <div className="text-xs text-orange-600 mt-1">
+                                        ⚠️ Múltiplas comunicações no mesmo dia
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
                                 {conflictInfo.marcos.length > 0 && (
                                   <div>
                                     <div className="font-medium text-blue-600">Marcos Acadêmicos:</div>
@@ -362,24 +404,6 @@ export function CalendarView() {
                                         • {marco.nome} ({marco.modalidade} - {marco.maturidade})
                                       </div>
                                     ))}
-                                  </div>
-                                )}
-
-                                {conflictInfo.comunicacoes.length > 0 && (
-                                  <div>
-                                    <div className="font-medium text-green-600">
-                                      Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
-                                    </div>
-                                    {conflictInfo.comunicacoes.map(comunicacao => (
-                                      <div key={comunicacao.id} className="text-sm">
-                                        • {comunicacao.nomeAcao} - {comunicacao.persona} ({comunicacao.pessoa})
-                                      </div>
-                                    ))}
-                                    {conflictInfo.comunicacoes.length > 1 && (
-                                      <div className="text-xs text-orange-600 mt-1">
-                                        ⚠️ Múltiplas comunicações no mesmo dia
-                                      </div>
-                                    )}
                                   </div>
                                 )}
 

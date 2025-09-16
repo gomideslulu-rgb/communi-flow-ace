@@ -247,40 +247,45 @@ export function CalendarView() {
                   <div className="bg-blue-50 p-2 font-medium border text-blue-700">
                     MARCOS
                   </div>
-                  <div className="grid gap-0 relative" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))` }}>
+                  <div className="grid gap-0 relative" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`, minHeight: '60px' }}>
                     {days.map(day => {
                       const conflictInfo = checkConflicts(day, 'Todos');
-                      const marco = conflictInfo.marcos[0]; // Pegar o primeiro marco se houver
-                      const span = marco ? getMarcoSpan(marco, day) : 0;
+                      const marcos = conflictInfo.marcos;
                       
                       return (
-                        <div key={day} className="border border-gray-200 min-h-[40px] relative">
-                          {marco && span > 0 && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div
-                                  className="absolute top-1 left-1 right-1 h-6 rounded text-white text-xs flex items-center justify-center font-medium cursor-pointer"
-                                  style={{ 
-                                    backgroundColor: marco.cor,
-                                    width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)'
-                                  }}
-                                >
-                                  {marco.nome}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="space-y-1">
-                                  <div className="font-medium">{marco.nome}</div>
-                                  <div className="text-sm">
-                                    {marco.modalidade} - {marco.maturidade}
+                        <div key={day} className="border border-gray-200 min-h-[60px] relative">
+                          {marcos.map((marco, index) => {
+                            const span = getMarcoSpan(marco, day);
+                            if (span <= 0) return null;
+                            
+                            return (
+                              <Tooltip key={`${marco.id}-${day}`}>
+                                <TooltipTrigger asChild>
+                                  <div
+                                    className="absolute left-1 right-1 h-5 rounded text-white text-xs flex items-center justify-center font-medium cursor-pointer"
+                                    style={{ 
+                                      backgroundColor: marco.cor,
+                                      width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)',
+                                      top: `${2 + (index * 22)}px`
+                                    }}
+                                  >
+                                    {marco.nome}
                                   </div>
-                                  <div className="text-sm">
-                                    {marco.dataInicio} {marco.dataFim && marco.dataFim !== marco.dataInicio && `até ${marco.dataFim}`}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="space-y-1">
+                                    <div className="font-medium">{marco.nome}</div>
+                                    <div className="text-sm">
+                                      {marco.modalidade} - {marco.maturidade}
+                                    </div>
+                                    <div className="text-sm">
+                                      {marco.dataInicio} {marco.dataFim && marco.dataFim !== marco.dataInicio && `até ${marco.dataFim}`}
+                                    </div>
                                   </div>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          })}
                         </div>
                       );
                     })}

@@ -321,12 +321,14 @@ export function CalendarView() {
                         if (span <= 0) return null;
                         return <Tooltip key={`${marco.id}-${day}`}>
                                 <TooltipTrigger asChild>
-                                  <div className="absolute left-1 right-1 h-5 rounded text-white text-xs flex items-center justify-center font-medium cursor-pointer" style={{
+                                  <div className="absolute left-1 right-1 h-1 text-white text-xs flex items-center justify-center font-medium cursor-pointer overflow-hidden" style={{
                               backgroundColor: marco.cor,
                               width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)',
-                              top: `${2 + index * 22}px`
+                              top: `${4 + index * 6}px`
                             }}>
-                                    {marco.nome}
+                                    <span className="text-xs font-medium truncate px-1" style={{ color: marco.cor, backgroundColor: 'white', borderRadius: '2px', fontSize: '10px' }}>
+                                      {marco.nome}
+                                    </span>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -452,12 +454,32 @@ export function CalendarView() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {days.filter(day => {
-              const hasComm = filteredPessoas.some(pessoa => checkConflicts(day, pessoa).comunicacoes.length > 0);
-              return !isWeekend(day) && !hasComm;
-            }).slice(0, 10).map(day => <Badge key={day} variant="outline" className="p-2 justify-center border-green-500 text-green-700">
+              {(() => {
+                const availableDays = [];
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                
+                // Começar do dia atual e ir até o final do mês
+                for (let day = today.getDate(); day <= daysInMonth; day++) {
+                  const currentDate = new Date(currentYear, currentMonth, day);
+                  const dayOfWeek = currentDate.getDay();
+                  const isWeekendDay = dayOfWeek === 0 || dayOfWeek === 6;
+                  
+                  const hasComm = filteredPessoas.some(pessoa => checkConflicts(day, pessoa).comunicacoes.length > 0);
+                  
+                  if (!isWeekendDay && !hasComm) {
+                    availableDays.push(day);
+                  }
+                }
+                
+                return availableDays.map(day => (
+                  <Badge key={day} variant="outline" className="p-2 justify-center border-green-500 text-green-700">
                     Dia {day}
-                  </Badge>)}
+                  </Badge>
+                ));
+              })()}
             </div>
           </CardContent>
         </Card>

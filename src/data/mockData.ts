@@ -35,7 +35,8 @@ export const mockData = {
     { nome: 'Ausente', cor: '#ef4444', categoria: 'restrita', id: '6' },
     { nome: 'Sem Foco', cor: '#f59e0b', categoria: 'restrita', id: '7' },
     { nome: 'Parado', cor: '#6b7280', categoria: 'restrita', id: '8' },
-    { nome: 'Evolução', cor: '#ec4899', categoria: 'restrita', id: '9' }
+    { nome: 'Evolução', cor: '#ec4899', categoria: 'restrita', id: '9' },
+    { nome: 'Base Externa', cor: '#14b8a6', categoria: 'disponivel', id: '10' }
   ] as Persona[],
 
   marcos: [

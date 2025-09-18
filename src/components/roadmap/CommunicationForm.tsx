@@ -31,6 +31,8 @@ export function CommunicationForm() {
 
   const [customRepique, setCustomRepique] = useState('');
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [newPersonName, setNewPersonName] = useState('');
+  const [showPersonManagement, setShowPersonManagement] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,6 +158,28 @@ export function CommunicationForm() {
     }));
   };
 
+  const addPerson = () => {
+    if (newPersonName && !mockData.pessoas.includes(newPersonName)) {
+      mockData.pessoas.push(newPersonName);
+      setNewPersonName('');
+      toast({
+        title: "Pessoa adicionada",
+        description: `${newPersonName} foi adicionado à lista de pessoas.`
+      });
+    }
+  };
+
+  const removePerson = (pessoa: string) => {
+    const index = mockData.pessoas.indexOf(pessoa);
+    if (index > -1) {
+      mockData.pessoas.splice(index, 1);
+      toast({
+        title: "Pessoa removida",
+        description: `${pessoa} foi removido da lista de pessoas.`
+      });
+    }
+  };
+
   const conflictInfo = formData.dataInicio ? checkDateConflicts(formData.dataInicio) : null;
 
   return (
@@ -172,7 +196,53 @@ export function CommunicationForm() {
             {/* Informações Básicas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="pessoa">Pessoa *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="pessoa">Pessoa *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPersonManagement(!showPersonManagement)}
+                  >
+                    Gerenciar Pessoas
+                  </Button>
+                </div>
+                
+                {showPersonManagement && (
+                  <div className="p-3 border rounded space-y-3">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Nome da nova pessoa"
+                        value={newPersonName}
+                        onChange={(e) => setNewPersonName(e.target.value)}
+                      />
+                      <Button type="button" onClick={addPerson} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm">Pessoas existentes:</Label>
+                      <div className="max-h-24 overflow-y-auto space-y-1">
+                        {mockData.pessoas.map(pessoa => (
+                          <div key={pessoa} className="flex items-center justify-between bg-muted p-2 rounded">
+                            <span className="text-sm">{pessoa}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removePerson(pessoa)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <Select value={formData.pessoa} onValueChange={(value) => setFormData(prev => ({ ...prev, pessoa: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma pessoa" />

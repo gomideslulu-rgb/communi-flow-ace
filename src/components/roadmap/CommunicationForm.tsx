@@ -295,41 +295,52 @@ export function CommunicationForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="persona">Persona *</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <Select value={formData.persona} onValueChange={(value) => setFormData(prev => ({ ...prev, persona: value }))}>
-                        <SelectTrigger className={conflictInfo?.temConflito ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="Selecione uma persona" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockData.personas.map(persona => (
-                            <SelectItem key={persona.nome} value={persona.nome}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: persona.cor }}
-                                />
-                                {persona.nome}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </TooltipTrigger>
-                  {conflictInfo?.temConflito && (
-                    <TooltipContent className="max-w-xs">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
-                        <div>
-                          <div className="font-medium">Conflito Identificado</div>
-                          <div className="text-sm">{conflictInfo.recomendacao}</div>
+                <div className={`grid grid-cols-2 gap-2 p-3 border rounded ${conflictInfo?.temConflito ? 'border-red-500' : ''}`}>
+                  {mockData.personas.map(persona => (
+                    <Tooltip key={persona.nome}>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
+                            formData.persona === persona.nome 
+                              ? 'bg-primary/10 border border-primary' 
+                              : 'hover:bg-muted border border-transparent'
+                          }`}
+                          onClick={() => setFormData(prev => ({ ...prev, persona: persona.nome }))}
+                        >
+                          <div 
+                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm" 
+                            style={{ backgroundColor: persona.cor }}
+                          />
+                          <Label 
+                            className="text-sm font-normal cursor-pointer flex-1"
+                          >
+                            {persona.nome}
+                          </Label>
+                          {formData.persona === persona.nome && (
+                            <div className="w-2 h-2 bg-primary rounded-full" />
+                          )}
                         </div>
-                      </div>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-sm">
+                          <div className="font-medium">{persona.nome}</div>
+                          <div className="text-xs opacity-75">
+                            Categoria: {persona.categoria}
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                {conflictInfo?.temConflito && (
+                  <div className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded">
+                    <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
+                    <div className="text-sm text-red-700">
+                      <div className="font-medium">Conflito Identificado</div>
+                      <div>{conflictInfo.recomendacao}</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

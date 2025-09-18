@@ -20,7 +20,7 @@ export function CommunicationForm() {
     nomeAcao: '',
     categoria: '',
     instituicao: '',
-    persona: '',
+    persona: [],
     tipoDisparo: 'Pontual',
     dataInicio: '',
     dataFim: '',
@@ -37,7 +37,7 @@ export function CommunicationForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.pessoa || !formData.categoria || !formData.instituicao || !formData.persona) {
+    if (!formData.pessoa || !formData.categoria || !formData.instituicao || !formData.persona?.length) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios",
@@ -96,7 +96,7 @@ export function CommunicationForm() {
       nomeAcao: '',
       categoria: '',
       instituicao: '',
-      persona: '',
+      persona: [],
       tipoDisparo: 'Pontual',
       dataInicio: '',
       dataFim: '',
@@ -120,7 +120,7 @@ export function CommunicationForm() {
     );
 
     const personasRestritas = ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'];
-    const personaRestrita = personasRestritas.includes(formData.persona?.toLowerCase() || '');
+    const personaRestrita = formData.persona?.some(p => personasRestritas.includes(p?.toLowerCase() || ''));
 
     const temConflito = temProva && personaRestrita;
     
@@ -301,11 +301,20 @@ export function CommunicationForm() {
                       <TooltipTrigger asChild>
                         <div 
                           className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
-                            formData.persona === persona.nome 
+                            formData.persona?.includes(persona.nome) 
                               ? 'bg-primary/10 border border-primary' 
                               : 'hover:bg-muted border border-transparent'
                           }`}
-                          onClick={() => setFormData(prev => ({ ...prev, persona: persona.nome }))}
+                          onClick={() => {
+                            const currentPersonas = formData.persona || [];
+                            const isSelected = currentPersonas.includes(persona.nome);
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              persona: isSelected 
+                                ? currentPersonas.filter(p => p !== persona.nome)
+                                : [...currentPersonas, persona.nome]
+                            }));
+                          }}
                         >
                           <div 
                             className="w-4 h-4 rounded-full border-2 border-white shadow-sm" 
@@ -316,7 +325,7 @@ export function CommunicationForm() {
                           >
                             {persona.nome}
                           </Label>
-                          {formData.persona === persona.nome && (
+                          {formData.persona?.includes(persona.nome) && (
                             <div className="w-2 h-2 bg-primary rounded-full" />
                           )}
                         </div>

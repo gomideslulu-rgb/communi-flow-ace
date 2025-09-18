@@ -28,7 +28,7 @@ export interface Comunicacao {
   nomeAcao: string;
   categoria: string;
   instituicao: string;
-  persona: string;
+  persona: string[];
   tipoDisparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
   dataInicio: string;
   dataFim?: string;

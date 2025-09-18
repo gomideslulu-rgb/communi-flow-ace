@@ -97,7 +97,7 @@ export function CalendarView() {
 
     // Verificar comunicações existentes para a pessoa específica
     const comunicacoesDoDay = mockData.comunicacoes.filter(comm => comm.dataInicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa === pessoa));
-    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(comm.persona.toLowerCase())));
+    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => comm.persona.some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p.toLowerCase()))));
     let recomendacao = '';
     if (marcosDoDay.some(m => ['PROVA AV', 'PROVA AVS'].includes(m.nome))) {
       recomendacao = 'Em momento de PROVA AV/AVS, recomenda-se evitar personas: ausente, sem foco, parado, interessado, evolução.';
@@ -373,7 +373,7 @@ export function CalendarView() {
                                 {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-wrap gap-1">
                                     {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => <div key={comunicacao.id} className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold relative" style={{
-                              backgroundColor: mockData.personas.find(p => p.nome === comunicacao.persona)?.cor || '#666'
+                              backgroundColor: mockData.personas.find(p => comunicacao.persona.includes(p.nome))?.cor || '#666'
                             }}>
                                         {comunicacao.pessoa.charAt(0)}
                                         {conflictInfo.comunicacoes.length > 1 && index === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">

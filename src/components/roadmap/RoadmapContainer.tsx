@@ -6,28 +6,8 @@ import { AcademicCalendar } from './AcademicCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Plus, GraduationCap } from 'lucide-react';
 import { mockData } from '@/data/mockData';
-import { Marco, Comunicacao } from '@/types/roadmap';
 
 export function RoadmapContainer() {
-  const [marcos, setMarcos] = useState<Marco[]>(mockData.marcos);
-  const [comunicacoes, setComunicacoes] = useState<Comunicacao[]>(mockData.comunicacoes);
-
-  const deleteMarco = (id: string) => {
-    setMarcos(prev => prev.filter(marco => marco.id !== id));
-  };
-
-  const addMarco = (marco: Marco) => {
-    setMarcos(prev => [...prev, marco]);
-  };
-
-  const deleteComunicacao = (id: string) => {
-    setComunicacoes(prev => prev.filter(com => com.id !== id));
-  };
-
-  const addComunicacao = (comunicacao: Comunicacao) => {
-    setComunicacoes(prev => [...prev, comunicacao]);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -57,27 +37,18 @@ export function RoadmapContainer() {
           </TabsList>
 
           <TabsContent value="roadmap" className="space-y-6">
-            <CalendarView 
-              marcos={marcos}
-              comunicacoes={comunicacoes}
-              onDeleteMarco={deleteMarco}
-              onDeleteComunicacao={deleteComunicacao}
-            />
+            <CalendarView />
           </TabsContent>
 
           <TabsContent value="comunicacao" className="space-y-6">
             <Card className="p-6">
-              <CommunicationForm onAddComunicacao={addComunicacao} />
+              <CommunicationForm />
             </Card>
           </TabsContent>
 
           <TabsContent value="calendario" className="space-y-6">
             <Card className="p-6">
-              <AcademicCalendar 
-                marcos={marcos}
-                onDeleteMarco={deleteMarco}
-                onAddMarco={addMarco}
-              />
+              <AcademicCalendar />
             </Card>
           </TabsContent>
         </Tabs>

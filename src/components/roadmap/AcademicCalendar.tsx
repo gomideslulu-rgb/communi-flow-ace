@@ -6,17 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, GraduationCap } from 'lucide-react';
+import { mockData } from '@/data/mockData';
 import { Marco } from '@/types/roadmap';
 import { useToast } from '@/hooks/use-toast';
 
-interface AcademicCalendarProps {
-  marcos: Marco[];
-  onDeleteMarco: (id: string) => void;
-  onAddMarco: (marco: Marco) => void;
-}
-
-export function AcademicCalendar({ marcos, onDeleteMarco, onAddMarco }: AcademicCalendarProps) {
+export function AcademicCalendar() {
   const { toast } = useToast();
+  const [marcos, setMarcos] = useState(mockData.marcos);
   const [formData, setFormData] = useState<Partial<Marco>>({
     nome: '',
     dataInicio: '',
@@ -69,7 +65,7 @@ export function AcademicCalendar({ marcos, onDeleteMarco, onAddMarco }: Academic
       cor: formData.cor || '#3b82f6'
     };
 
-    onAddMarco(newMarco);
+    setMarcos(prev => [...prev, newMarco]);
     
     toast({
       title: "Marco acadêmico cadastrado",
@@ -89,7 +85,7 @@ export function AcademicCalendar({ marcos, onDeleteMarco, onAddMarco }: Academic
   };
 
   const deleteMarco = (id: string) => {
-    onDeleteMarco(id);
+    setMarcos(prev => prev.filter(marco => marco.id !== id));
     toast({
       title: "Marco removido",
       description: "O marco acadêmico foi removido do calendário",

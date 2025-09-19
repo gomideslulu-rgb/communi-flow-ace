@@ -3,18 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Calendar, AlertTriangle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, AlertTriangle, Info, X } from 'lucide-react';
 import { mockData } from '@/data/mockData';
 import { ConflictoInfo } from '@/types/roadmap';
+import { useToast } from '@/hooks/use-toast';
 export function CalendarView() {
+  const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState('Setembro 2025');
   const [filters, setFilters] = useState({
     pessoa: 'Todos',
     categoria: 'Todos'
   });
+  const [refreshKey, setRefreshKey] = useState(0);
   const meses = ['Julho 2025', 'Agosto 2025', 'Setembro 2025', 'Outubro 2025', 'Novembro 2025', 'Dezembro 2025'];
   const pessoas = ['Todos', ...mockData.pessoas];
   const categorias = ['Todos', ...mockData.categorias.map(c => c.nome)];
+
+  // Função para excluir comunicação
+  const handleDeleteComunicacao = (comunicacaoId: string) => {
+    const index = mockData.comunicacoes.findIndex(c => c.id === comunicacaoId);
+    if (index !== -1) {
+      mockData.comunicacoes.splice(index, 1);
+      setRefreshKey(prev => prev + 1);
+      toast({
+        title: "Comunicação excluída",
+        description: "A comunicação foi removida do roadmap com sucesso.",
+      });
+    }
+  };
 
   // Função para gerar os dias do mês
   const generateTimelineDays = () => {
@@ -312,7 +329,7 @@ export function CalendarView() {
                   gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`,
                   minHeight: '60px'
                 }}>
-                    {days.map(day => {
+                  {days.map(day => {
                     const conflictInfo = checkConflicts(day, 'Todos');
                     const marcos = conflictInfo.marcos;
                     return <div key={day} className="border border-gray-200 min-h-[60px] relative">
@@ -321,12 +338,17 @@ export function CalendarView() {
                         if (span <= 0) return null;
                         return <Tooltip key={`${marco.id}-${day}`}>
                                 <TooltipTrigger asChild>
-                                  <div className="absolute left-1 right-1 h-1 text-white text-xs flex items-center justify-center font-medium cursor-pointer overflow-hidden" style={{
-                              backgroundColor: marco.cor,
-                              width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : 'calc(100% - 8px)',
-                              top: `${4 + index * 6}px`
-                            }}>
-                                    <span className="text-xs font-medium truncate px-1" style={{ color: marco.cor, backgroundColor: 'white', borderRadius: '2px', fontSize: '10px' }}>
+                                  <div 
+                                    className="absolute left-0 right-0 h-4 flex items-center justify-center text-xs font-medium cursor-pointer rounded"
+                                    style={{
+                                      backgroundColor: marco.cor,
+                                      color: 'white',
+                                      width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
+                                      top: `${2 + index * 16}px`,
+                                      fontSize: '10px'
+                                    }}
+                                  >
+                                    <span className="truncate px-1">
                                       {marco.nome}
                                     </span>
                                   </div>
@@ -406,14 +428,29 @@ export function CalendarView() {
                                     <div className="font-medium text-green-600">
                                       Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
                                     </div>
-                                    {conflictInfo.comunicacoes.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1">
-                                        <div>• <strong>{comunicacao.nomeAcao}</strong></div>
-                                        <div className="text-xs text-gray-600 ml-2">
-                                          Persona: {comunicacao.persona}<br />
-                                          Categoria: {comunicacao.categoria}<br />
-                                          Instituição: {comunicacao.instituicao}<br />
-                                          Tipo: {comunicacao.tipoDisparo}
-                                          {comunicacao.canais.length > 0 && <><br />Canais: {comunicacao.canais.join(', ')}</>}
+                                    {conflictInfo.comunicacoes.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1 border-b border-gray-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1">
+                                            <div>• <strong>{comunicacao.nomeAcao}</strong></div>
+                                            <div className="text-xs text-gray-600 ml-2">
+                                              Persona: {comunicacao.persona.join(', ')}<br />
+                                              Categoria: {comunicacao.categoria}<br />
+                                              Instituição: {comunicacao.instituicao}<br />
+                                              Tipo: {comunicacao.tipoDisparo}
+                                              {comunicacao.canais.length > 0 && <><br />Canais: {comunicacao.canais.join(', ')}</>}
+                                            </div>
+                                          </div>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteComunicacao(comunicacao.id);
+                                            }}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
                                         </div>
                                       </div>)}
                                     {conflictInfo.comunicacoes.length > 1 && <div className="text-xs text-orange-600 mt-1">

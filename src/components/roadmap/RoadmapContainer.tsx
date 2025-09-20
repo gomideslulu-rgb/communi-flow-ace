@@ -6,18 +6,22 @@ import { AcademicCalendar } from './AcademicCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Plus, GraduationCap } from 'lucide-react';
 import { mockData } from '@/data/mockData';
+import { UserMenu } from '@/components/ui/user-menu';
 
 export function RoadmapContainer() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="text-center space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Roadmap de Comunicação
-          </h1>
-          <p className="text-muted-foreground">
-            Gerencie comunicações acadêmicas com inteligência e eficiência
-          </p>
+        <header className="flex justify-between items-start">
+          <div className="text-center flex-1 space-y-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Roadmap de Comunicação
+            </h1>
+            <p className="text-muted-foreground">
+              Gerencie comunicações acadêmicas com inteligência e eficiência
+            </p>
+          </div>
+          <UserMenu />
         </header>
 
         <Tabs defaultValue="roadmap" className="space-y-6">

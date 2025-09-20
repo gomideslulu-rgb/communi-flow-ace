@@ -5,10 +5,33 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Calendar, AlertTriangle, Info, X } from 'lucide-react';
-import { mockData } from '@/data/mockData';
 import { ConflictoInfo } from '@/types/roadmap';
 import { useToast } from '@/hooks/use-toast';
-export function CalendarView() {
+import { Marco } from '@/hooks/useMarcos';
+import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';
+
+interface ConflictInfoSupabase {
+  temConflito: boolean;
+  marcos: Marco[];
+  comunicacoes: ComunicacaoDetalhada[];
+  recomendacao?: string;
+}
+
+interface CalendarViewProps {
+  marcos: Marco[];
+  supabaseData: {
+    pessoas: any[];
+    categorias: any[];
+    instituicoes: any[];
+    personas: any[];
+    canais: any[];
+    comunicacoes: ComunicacaoDetalhada[];
+    loading: boolean;
+    deleteComunicacao: (id: string) => Promise<void>;
+  };
+}
+
+export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState('Setembro 2025');
   const [filters, setFilters] = useState({
@@ -17,19 +40,16 @@ export function CalendarView() {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const meses = ['Julho 2025', 'Agosto 2025', 'Setembro 2025', 'Outubro 2025', 'Novembro 2025', 'Dezembro 2025'];
-  const pessoas = ['Todos', ...mockData.pessoas];
-  const categorias = ['Todos', ...mockData.categorias.map(c => c.nome)];
+  const pessoas = ['Todos', ...supabaseData.pessoas.map(p => p.nome)];
+  const categorias = ['Todos', ...supabaseData.categorias.map(c => c.nome)];
 
   // Função para excluir comunicação
-  const handleDeleteComunicacao = (comunicacaoId: string) => {
-    const index = mockData.comunicacoes.findIndex(c => c.id === comunicacaoId);
-    if (index !== -1) {
-      mockData.comunicacoes.splice(index, 1);
+  const handleDeleteComunicacao = async (comunicacaoId: string) => {
+    try {
+      await supabaseData.deleteComunicacao(comunicacaoId);
       setRefreshKey(prev => prev + 1);
-      toast({
-        title: "Comunicação excluída",
-        description: "A comunicação foi removida do roadmap com sucesso.",
-      });
+    } catch (error) {
+      // Error already handled in the hook
     }
   };
 
@@ -110,11 +130,11 @@ export function CalendarView() {
     const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     // Verificar marcos acadêmicos
-    const marcosDoDay = mockData.marcos.filter(marco => targetDate >= marco.dataInicio && targetDate <= (marco.dataFim || marco.dataInicio));
+    const marcosDoDay = marcos.filter(marco => targetDate >= marco.data_inicio && targetDate <= (marco.data_fim || marco.data_inicio));
 
     // Verificar comunicações existentes para a pessoa específica
-    const comunicacoesDoDay = mockData.comunicacoes.filter(comm => comm.dataInicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa === pessoa));
-    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => comm.persona.some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p.toLowerCase()))));
+    const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => comm.data_inicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa.nome === pessoa));
+    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => comm.personas.some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p.nome.toLowerCase()))));
     let recomendacao = '';
     if (marcosDoDay.some(m => ['PROVA AV', 'PROVA AVS'].includes(m.nome))) {
       recomendacao = 'Em momento de PROVA AV/AVS, recomenda-se evitar personas: ausente, sem foco, parado, interessado, evolução.';
@@ -163,7 +183,7 @@ export function CalendarView() {
     return dayOfWeek === 0 || dayOfWeek === 6;
   };
   const days = generateTimelineDays();
-  const filteredPessoas = filters.pessoa === 'Todos' ? mockData.pessoas : [filters.pessoa];
+  const filteredPessoas = filters.pessoa === 'Todos' ? supabaseData.pessoas.map(p => p.nome) : [filters.pessoa];
 
   // Função para obter marcos que se estendem por múltiplos dias
   const getMarcoSpan = (marco: any, day: number) => {
@@ -271,7 +291,7 @@ export function CalendarView() {
               <div>
                 <h4 className="font-medium mb-2">Personas</h4>
                 <div className="flex flex-wrap gap-2">
-                  {mockData.personas.map(persona => <Badge key={persona.id} style={{
+                  {supabaseData.personas.map(persona => <Badge key={persona.id} style={{
                   backgroundColor: persona.cor,
                   color: 'white'
                 }}>
@@ -395,9 +415,9 @@ export function CalendarView() {
                                 {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-wrap gap-1">
                                     {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => <div key={comunicacao.id} className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold relative" style={{
-                              backgroundColor: mockData.personas.find(p => comunicacao.persona.includes(p.nome))?.cor || '#666'
+                              backgroundColor: supabaseData.personas.find(p => comunicacao.personas.some(cp => cp.nome === p.nome))?.cor || '#666'
                             }}>
-                                        {comunicacao.pessoa.charAt(0)}
+                                        {comunicacao.pessoa.nome.charAt(0)}
                                         {conflictInfo.comunicacoes.length > 1 && index === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
                                             {conflictInfo.comunicacoes.length}
                                           </div>}

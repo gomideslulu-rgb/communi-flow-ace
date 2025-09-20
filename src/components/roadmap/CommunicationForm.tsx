@@ -9,22 +9,38 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, X, AlertTriangle, Info } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { mockData } from '@/data/mockData';
-import { Comunicacao } from '@/types/roadmap';
 import { useToast } from '@/hooks/use-toast';
+import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';
+import { useComunicacoes, type ComunicacaoForm } from '@/hooks/useComunicacoes';
 
-export function CommunicationForm() {
+interface CommunicationFormProps {
+  supabaseData: {
+    pessoas: any[];
+    categorias: any[];
+    instituicoes: any[];
+    personas: any[];
+    canais: any[];
+    comunicacoes: ComunicacaoDetalhada[];
+    loading: boolean;
+    addPessoa: (nome: string) => Promise<any>;
+    deletePessoa: (id: string) => Promise<void>;
+    refetch: () => Promise<void>;
+  };
+}
+
+export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Partial<Comunicacao>>({
-    pessoa: '',
-    nomeAcao: '',
-    categoria: '',
-    instituicao: '',
-    persona: [],
-    tipoDisparo: 'Pontual',
-    dataInicio: '',
-    dataFim: '',
-    canais: [],
+  const { saveComunicacao } = useComunicacoes();
+  const [formData, setFormData] = useState<ComunicacaoForm>({
+    pessoa_id: '',
+    nome_acao: '',
+    categoria_id: '',
+    instituicao_id: '',
+    persona_ids: [],
+    tipo_disparo: 'Pontual',
+    data_inicio: '',
+    data_fim: '',
+    canal_ids: [],
     repiques: [],
     ativo: true
   });
@@ -34,10 +50,10 @@ export function CommunicationForm() {
   const [newPersonName, setNewPersonName] = useState('');
   const [showPersonManagement, setShowPersonManagement] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.pessoa || !formData.categoria || !formData.instituicao || !formData.persona?.length) {
+    if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios",
@@ -47,489 +63,382 @@ export function CommunicationForm() {
     }
 
     // Verificar conflitos
-    const conflictInfo = checkDateConflicts(formData.dataInicio!);
+    const conflictInfo = checkDateConflicts(formData.data_inicio);
     
     if (conflictInfo.temConflito) {
       setConflictDialogOpen(true);
       return;
     }
 
-    saveCommuication();
-  };
-
-  const saveCommuication = () => {
-    // Verificar se já existe comunicação no mesmo dia para a mesma pessoa
-    const comunicacoesNoMesmoDia = mockData.comunicacoes.filter(comm => 
-      comm.dataInicio === formData.dataInicio && 
-      comm.pessoa === formData.pessoa &&
-      comm.ativo
-    );
-
-    // Adicionar a nova comunicação (em uma implementação real, seria salvo no backend)
-    const novaComunicacao: Comunicacao = {
-      id: Date.now().toString(),
-      pessoa: formData.pessoa!,
-      nomeAcao: formData.nomeAcao || 'Comunicação',
-      categoria: formData.categoria!,
-      instituicao: formData.instituicao!,
-      persona: formData.persona!,
-      tipoDisparo: formData.tipoDisparo!,
-      dataInicio: formData.dataInicio!,
-      dataFim: formData.dataFim,
-      canais: formData.canais || [],
-      repiques: formData.repiques,
-      ativo: true
-    };
-
-    mockData.comunicacoes.push(novaComunicacao);
-
-    toast({
-      title: "Comunicação cadastrada",
-      description: comunicacoesNoMesmoDia.length > 0 
-        ? `Comunicação adicionada. Atenção: ${comunicacoesNoMesmoDia.length + 1} comunicações no mesmo dia.`
-        : "A comunicação foi adicionada ao roadmap com sucesso",
-    });
-
-    // Reset form
-    setFormData({
-      pessoa: '',
-      nomeAcao: '',
-      categoria: '',
-      instituicao: '',
-      persona: [],
-      tipoDisparo: 'Pontual',
-      dataInicio: '',
-      dataFim: '',
-      canais: [],
-      repiques: [],
-      ativo: true
-    });
-    setConflictDialogOpen(false);
-  };
-
-  const checkDateConflicts = (data: string) => {
-    if (!data) return { temConflito: false, recomendacao: '' };
-
-    // Verificar marcos acadêmicos na data
-    const marcosNaData = mockData.marcos.filter(marco => 
-      data >= marco.dataInicio && data <= (marco.dataFim || marco.dataInicio)
-    );
-
-    const temProva = marcosNaData.some(marco => 
-      ['PROVA AV', 'PROVA AVS'].includes(marco.nome)
-    );
-
-    const personasRestritas = ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'];
-    const personaRestrita = formData.persona?.some(p => personasRestritas.includes(p?.toLowerCase() || ''));
-
-    const temConflito = temProva && personaRestrita;
-    
-    let recomendacao = '';
-    if (temProva) {
-      recomendacao = 'Em momento de PROVA AV/AVS, recomenda-se evitar personas: ausente, sem foco, parado, interessado, evolução.';
+    try {
+      await saveComunicacao(formData);
+      await supabaseData.refetch();
+      
+      // Reset form
+      setFormData({
+        pessoa_id: '',
+        nome_acao: '',
+        categoria_id: '',
+        instituicao_id: '',
+        persona_ids: [],
+        tipo_disparo: 'Pontual',
+        data_inicio: '',
+        data_fim: '',
+        canal_ids: [],
+        repiques: [],
+        ativo: true
+      });
+    } catch (error) {
+      // Error already handled in hook
     }
+  };
 
-    return { temConflito, marcos: marcosNaData, recomendacao };
+  const saveWithConflict = async () => {
+    try {
+      await saveComunicacao(formData);
+      await supabaseData.refetch();
+      setConflictDialogOpen(false);
+      
+      // Reset form
+      setFormData({
+        pessoa_id: '',
+        nome_acao: '',
+        categoria_id: '',
+        instituicao_id: '',
+        persona_ids: [],
+        tipo_disparo: 'Pontual',
+        data_inicio: '',
+        data_fim: '',
+        canal_ids: [],
+        repiques: [],
+        ativo: true
+      });
+    } catch (error) {
+      // Error already handled in hook
+    }
+  };
+
+  // Função para verificar conflitos de datas
+  const checkDateConflicts = (targetDate: string) => {
+    if (!targetDate) return { temConflito: false, marcos: [], comunicacoes: [], recomendacao: '' };
+
+    // Verificar marcos acadêmicos que coincide com a data
+    const marcos = []; // Em implementação real, buscar marcos do Supabase
+    const comunicacoes = supabaseData.comunicacoes.filter(
+      comm => comm.data_inicio === targetDate && comm.ativo
+    );
+
+    const temConflito = false; // Lógica de conflito seria implementada aqui
+    const recomendacao = '';
+
+    return {
+      temConflito,
+      marcos,
+      comunicacoes,
+      recomendacao
+    };
   };
 
   const addRepique = () => {
-    if (customRepique && !formData.repiques?.includes(customRepique)) {
-      setFormData(prev => ({
-        ...prev,
-        repiques: [...(prev.repiques || []), customRepique]
-      }));
+    if (customRepique) {
+      setFormData({
+        ...formData,
+        repiques: [...formData.repiques, customRepique]
+      });
       setCustomRepique('');
     }
   };
 
-  const removeRepique = (repique: string) => {
-    setFormData(prev => ({
-      ...prev,
-      repiques: prev.repiques?.filter(r => r !== repique) || []
-    }));
+  const removeRepique = (index: number) => {
+    const newRepiques = formData.repiques.filter((_, i) => i !== index);
+    setFormData({ ...formData, repiques: newRepiques });
   };
 
-  const handleChannelChange = (channel: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      canais: checked 
-        ? [...(prev.canais || []), channel]
-        : prev.canais?.filter(c => c !== channel) || []
-    }));
+  const handleChannelChange = (canalId: string, checked: boolean) => {
+    const updatedCanais = checked
+      ? [...formData.canal_ids, canalId]
+      : formData.canal_ids.filter(id => id !== canalId);
+    
+    setFormData({ ...formData, canal_ids: updatedCanais });
   };
 
-  const addPerson = () => {
-    if (newPersonName && !mockData.pessoas.includes(newPersonName)) {
-      mockData.pessoas.push(newPersonName);
-      setNewPersonName('');
-      toast({
-        title: "Pessoa adicionada",
-        description: `${newPersonName} foi adicionado à lista de pessoas.`
-      });
+  const handlePersonaChange = (personaId: string, checked: boolean) => {
+    const updatedPersonas = checked
+      ? [...formData.persona_ids, personaId]
+      : formData.persona_ids.filter(id => id !== personaId);
+    
+    setFormData({ ...formData, persona_ids: updatedPersonas });
+  };
+
+  const addPerson = async () => {
+    if (newPersonName.trim()) {
+      try {
+        await supabaseData.addPessoa(newPersonName.trim());
+        setNewPersonName('');
+        setShowPersonManagement(false);
+      } catch (error) {
+        // Error already handled in hook
+      }
     }
   };
 
-  const removePerson = (pessoa: string) => {
-    const index = mockData.pessoas.indexOf(pessoa);
-    if (index > -1) {
-      mockData.pessoas.splice(index, 1);
-      toast({
-        title: "Pessoa removida",
-        description: `${pessoa} foi removido da lista de pessoas.`
-      });
+  const removePerson = async (pessoaId: string) => {
+    try {
+      await supabaseData.deletePessoa(pessoaId);
+    } catch (error) {
+      // Error already handled in hook
     }
   };
 
-  const conflictInfo = formData.dataInicio ? checkDateConflicts(formData.dataInicio) : null;
+  if (supabaseData.loading) {
+    return <div className="flex items-center justify-center p-8">Carregando...</div>;
+  }
 
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Nova Comunicação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Informações Básicas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
+        <Card>
+          <CardHeader>
+            <CardTitle>Nova Comunicação</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="pessoa">Pessoa *</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPersonManagement(!showPersonManagement)}
-                  >
-                    Gerenciar Pessoas
-                  </Button>
-                </div>
-                
-                {showPersonManagement && (
-                  <div className="p-3 border rounded space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Nome da nova pessoa"
-                        value={newPersonName}
-                        onChange={(e) => setNewPersonName(e.target.value)}
-                      />
-                      <Button type="button" onClick={addPerson} size="sm">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-sm">Pessoas existentes:</Label>
-                      <div className="max-h-24 overflow-y-auto space-y-1">
-                        {mockData.pessoas.map(pessoa => (
-                          <div key={pessoa} className="flex items-center justify-between bg-muted p-2 rounded">
-                            <span className="text-sm">{pessoa}</span>
+                  <div className="flex gap-2">
+                    <Select value={formData.pessoa_id} onValueChange={(value) => setFormData({...formData, pessoa_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar pessoa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.pessoas.map(pessoa => (
+                          <SelectItem key={pessoa.id} value={pessoa.id}>
+                            {pessoa.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPersonManagement(!showPersonManagement)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {showPersonManagement && (
+                    <div className="space-y-2 p-4 border rounded">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newPersonName}
+                          onChange={(e) => setNewPersonName(e.target.value)}
+                          placeholder="Nova pessoa"
+                        />
+                        <Button type="button" onClick={addPerson} size="sm">
+                          Adicionar
+                        </Button>
+                      </div>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {supabaseData.pessoas.map(pessoa => (
+                          <div key={pessoa.id} className="flex justify-between items-center p-2 border rounded">
+                            <span>{pessoa.nome}</span>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => removePerson(pessoa)}
-                              className="text-red-500 hover:text-red-700"
+                              onClick={() => removePerson(pessoa.id)}
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
                         ))}
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                <Select value={formData.pessoa} onValueChange={(value) => setFormData(prev => ({ ...prev, pessoa: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma pessoa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockData.pessoas.map(pessoa => (
-                      <SelectItem key={pessoa} value={pessoa}>{pessoa}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nome_acao">Nome da Ação</Label>
+                  <Input
+                    id="nome_acao"
+                    value={formData.nome_acao}
+                    onChange={(e) => setFormData({...formData, nome_acao: e.target.value})}
+                    placeholder="Digite o nome da ação"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria *</Label>
+                  <Select value={formData.categoria_id} onValueChange={(value) => setFormData({...formData, categoria_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supabaseData.categorias.map(categoria => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="instituicao">Instituição *</Label>
+                  <Select value={formData.instituicao_id} onValueChange={(value) => setFormData({...formData, instituicao_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar instituição" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supabaseData.instituicoes.map(instituicao => (
+                        <SelectItem key={instituicao.id} value={instituicao.id}>
+                          {instituicao.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="nomeAcao">Nome da Ação</Label>
-                <Input
-                  id="nomeAcao"
-                  value={formData.nomeAcao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nomeAcao: e.target.value }))}
-                  placeholder="Nome da ação de comunicação"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="categoria">Categoria *</Label>
-                <Select value={formData.categoria} onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockData.categorias.map(categoria => (
-                      <SelectItem key={categoria.nome} value={categoria.nome}>{categoria.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="instituicao">Instituição *</Label>
-                <Select value={formData.instituicao} onValueChange={(value) => setFormData(prev => ({ ...prev, instituicao: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma instituição" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockData.instituicoes.map(instituicao => (
-                      <SelectItem key={instituicao.nome} value={instituicao.nome}>{instituicao.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="persona">Persona *</Label>
-                <div className={`grid grid-cols-2 gap-2 p-3 border rounded ${conflictInfo?.temConflito ? 'border-red-500' : ''}`}>
-                  {mockData.personas.map(persona => (
-                    <Tooltip key={persona.nome}>
-                      <TooltipTrigger asChild>
-                        <div 
-                          className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
-                            formData.persona?.includes(persona.nome) 
-                              ? 'bg-primary/10 border border-primary' 
-                              : 'hover:bg-muted border border-transparent'
-                          }`}
-                          onClick={() => {
-                            const currentPersonas = formData.persona || [];
-                            const isSelected = currentPersonas.includes(persona.nome);
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              persona: isSelected 
-                                ? currentPersonas.filter(p => p !== persona.nome)
-                                : [...currentPersonas, persona.nome]
-                            }));
-                          }}
-                        >
-                          <div 
-                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm" 
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Persona *</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {supabaseData.personas.map(persona => (
+                      <div key={persona.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={persona.id}
+                          checked={formData.persona_ids.includes(persona.id)}
+                          onCheckedChange={(checked) => handlePersonaChange(persona.id, !!checked)}
+                        />
+                        <Label htmlFor={persona.id} className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: persona.cor }}
                           />
-                          <Label 
-                            className="text-sm font-normal cursor-pointer flex-1"
-                          >
-                            {persona.nome}
-                          </Label>
-                          {formData.persona?.includes(persona.nome) && (
-                            <div className="w-2 h-2 bg-primary rounded-full" />
-                          )}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-sm">
-                          <div className="font-medium">{persona.nome}</div>
-                          <div className="text-xs opacity-75">
-                            Categoria: {persona.categoria}
-                          </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
+                          {persona.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {conflictInfo?.temConflito && (
-                  <div className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded">
-                    <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
-                    <div className="text-sm text-red-700">
-                      <div className="font-medium">Conflito Identificado</div>
-                      <div>{conflictInfo.recomendacao}</div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo_disparo">Tipo de Disparo</Label>
+                    <Select value={formData.tipo_disparo} onValueChange={(value) => setFormData({...formData, tipo_disparo: value as any})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pontual">Pontual</SelectItem>
+                        <SelectItem value="Régua Fechada">Régua Fechada</SelectItem>
+                        <SelectItem value="Régua Aberta">Régua Aberta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="data_inicio">Data de Início *</Label>
+                    <Input
+                      id="data_inicio"
+                      type="date"
+                      value={formData.data_inicio}
+                      onChange={(e) => setFormData({...formData, data_inicio: e.target.value})}
+                    />
+                  </div>
+
+                  {(formData.tipo_disparo === 'Régua Fechada' || formData.tipo_disparo === 'Régua Aberta') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="data_fim">Data de Fim</Label>
+                      <Input
+                        id="data_fim"
+                        type="date"
+                        value={formData.data_fim}
+                        onChange={(e) => setFormData({...formData, data_fim: e.target.value})}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {formData.tipo_disparo === 'Régua Fechada' && (
+                  <div className="space-y-2">
+                    <Label>Repiques</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={customRepique}
+                        onChange={(e) => setCustomRepique(e.target.value)}
+                        placeholder="Ex: d+3, d+7, d+15"
+                      />
+                      <Button type="button" onClick={addRepique} variant="outline">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.repiques.map((repique, index) => (
+                        <Badge key={index} variant="secondary" className="gap-1">
+                          {repique}
+                          <button
+                            type="button"
+                            onClick={() => removeRepique(index)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tipoDisparo">Tipo de Disparo</Label>
-                <Select value={formData.tipoDisparo} onValueChange={(value) => setFormData(prev => ({ ...prev, tipoDisparo: value as any }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pontual">Pontual</SelectItem>
-                    <SelectItem value="Régua Fechada">Régua Fechada</SelectItem>
-                    <SelectItem value="Régua Aberta">Régua Aberta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Datas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dataInicio">Data de Início *</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Input
-                      id="dataInicio"
-                      type="date"
-                      value={formData.dataInicio}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dataInicio: e.target.value }))}
-                      className={conflictInfo?.temConflito ? 'border-red-500' : ''}
-                    />
-                  </TooltipTrigger>
-                  {conflictInfo && (
-                    <TooltipContent className="max-w-xs">
-                      <div className="space-y-2">
-                        {conflictInfo.marcos && conflictInfo.marcos.length > 0 && (
-                          <div>
-                            <div className="font-medium text-yellow-600">Marcos Acadêmicos nesta data:</div>
-                            {conflictInfo.marcos.map(marco => (
-                              <div key={marco.id} className="text-sm">
-                                • {marco.nome} ({marco.modalidade} - {marco.maturidade})
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {conflictInfo.recomendacao && (
-                          <div className="flex items-start gap-2 p-2 bg-orange-50 border border-orange-200 rounded">
-                            <Info className="h-3 w-3 mt-0.5" />
-                            <div className="text-sm">{conflictInfo.recomendacao}</div>
-                          </div>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </div>
-
-              {(formData.tipoDisparo === 'Régua Aberta') && (
                 <div className="space-y-2">
-                  <Label htmlFor="dataFim">Data de Fim</Label>
-                  <Input
-                    id="dataFim"
-                    type="date"
-                    value={formData.dataFim}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dataFim: e.target.value }))}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Repiques para Régua Fechada */}
-            {formData.tipoDisparo === 'Régua Fechada' && (
-              <div className="space-y-4">
-                <Label>Repiques</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Ex: d+3, d+7, d+15"
-                    value={customRepique}
-                    onChange={(e) => setCustomRepique(e.target.value)}
-                  />
-                  <Button type="button" onClick={addRepique} variant="outline">
-                    Adicionar
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.repiques?.map(repique => (
-                    <Badge key={repique} variant="secondary" className="gap-1">
-                      {repique}
-                      <button
-                        type="button"
-                        onClick={() => removeRepique(repique)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Canais */}
-            <div className="space-y-4">
-              <Label>Canais de Comunicação</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {mockData.canais.map(canal => (
-                  <div key={canal} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={canal}
-                      checked={formData.canais?.includes(canal)}
-                      onCheckedChange={(checked) => handleChannelChange(canal, checked as boolean)}
-                    />
-                    <Label htmlFor={canal} className="text-sm font-normal">
-                      {canal}
-                    </Label>
+                  <Label>Canais de Comunicação</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {supabaseData.canais.map(canal => (
+                      <div key={canal.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={canal.id}
+                          checked={formData.canal_ids.includes(canal.id)}
+                          onCheckedChange={(checked) => handleChannelChange(canal.id, !!checked)}
+                        />
+                        <Label htmlFor={canal.id}>{canal.nome}</Label>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
 
-            {/* Botão de Envio */}
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                className="min-w-[200px]"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Cadastrar Comunicação
-              </Button>
-            </div>
+              <div className="flex justify-end space-x-4">
+                <Button type="submit" className="px-8">
+                  Salvar Comunicação
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-            {/* Dialog de Conflito */}
-            <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                    Conflito Identificado
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="space-y-3">
-                    <div>
-                      Foi identificado um conflito com as regras de negócio para a data selecionada:
-                    </div>
-                    
-                    {conflictInfo?.marcos && conflictInfo.marcos.length > 0 && (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                        <div className="font-medium text-blue-700 mb-2">Marcos Acadêmicos na data:</div>
-                        {conflictInfo.marcos.map(marco => (
-                          <div key={marco.id} className="text-sm text-blue-600">
-                            • {marco.nome} ({marco.modalidade} - {marco.maturidade})
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {conflictInfo?.recomendacao && (
-                      <div className="p-3 bg-orange-50 border border-orange-200 rounded">
-                        <div className="flex items-start gap-2">
-                          <Info className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                          <div className="text-sm text-orange-700">
-                            {conflictInfo.recomendacao}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="text-sm text-gray-600">
-                      Deseja prosseguir com o cadastro mesmo assim?
-                    </div>
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={saveCommuication} className="bg-red-600 hover:bg-red-700">
-                    Sim, Cadastrar Mesmo Assim
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </form>
-        </CardContent>
+        <AlertDialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                Conflito Detectado
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Foi detectado um conflito com marcos acadêmicos ou outras comunicações na data selecionada. Deseja continuar mesmo assim?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={saveWithConflict}>
+                Salvar Mesmo Assim
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );

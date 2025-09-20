@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { CalendarView } from './CalendarView';
 import { CommunicationForm } from './CommunicationForm';
 import { AcademicCalendar } from './AcademicCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Plus, GraduationCap } from 'lucide-react';
-import { mockData } from '@/data/mockData';
 import { UserMenu } from '@/components/ui/user-menu';
+import { useMarcos } from '@/hooks/useMarcos';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 export function RoadmapContainer() {
+  const { marcos, addMarco, deleteMarco } = useMarcos();
+  const supabaseData = useSupabaseData();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -41,18 +45,18 @@ export function RoadmapContainer() {
           </TabsList>
 
           <TabsContent value="roadmap" className="space-y-6">
-            <CalendarView />
+            <CalendarView marcos={marcos} supabaseData={supabaseData} />
           </TabsContent>
 
           <TabsContent value="comunicacao" className="space-y-6">
             <Card className="p-6">
-              <CommunicationForm />
+              <CommunicationForm supabaseData={supabaseData} />
             </Card>
           </TabsContent>
 
           <TabsContent value="calendario" className="space-y-6">
             <Card className="p-6">
-              <AcademicCalendar />
+              <AcademicCalendar marcos={marcos} onAddMarco={addMarco} onDeleteMarco={deleteMarco} />
             </Card>
           </TabsContent>
         </Tabs>

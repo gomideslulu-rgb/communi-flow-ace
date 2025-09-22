@@ -6,6 +6,7 @@ import { AcademicCalendar } from './AcademicCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Plus, GraduationCap } from 'lucide-react';
 import { UserMenu } from '@/components/ui/user-menu';
+import { useAuth } from '@/hooks/useAuth';
 import { useMarcos } from '@/hooks/useMarcos';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 
@@ -30,36 +31,48 @@ export function RoadmapContainer() {
         </header>
 
         <Tabs defaultValue="roadmap" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="roadmap" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Roadmap
-            </TabsTrigger>
-            <TabsTrigger value="comunicacao" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Comunicação
-            </TabsTrigger>
-            <TabsTrigger value="calendario" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Calendário Acadêmico
-            </TabsTrigger>
-          </TabsList>
+          {!isGuest ? (
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="roadmap" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Roadmap
+              </TabsTrigger>
+              <TabsTrigger value="comunicacao" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Comunicação
+              </TabsTrigger>
+              <TabsTrigger value="calendario" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Calendário Acadêmico
+              </TabsTrigger>
+            </TabsList>
+          ) : (
+            <div className="bg-muted/50 p-4 rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">
+                Modo Visitante - Visualização do Roadmap
+              </p>
+            </div>
+          )}
 
           <TabsContent value="roadmap" className="space-y-6">
             <CalendarView marcos={marcos} supabaseData={supabaseData} />
           </TabsContent>
 
-          <TabsContent value="comunicacao" className="space-y-6">
-            <Card className="p-6">
-              <CommunicationForm supabaseData={supabaseData} />
-            </Card>
-          </TabsContent>
+          {!isGuest && (
+            <>
+              <TabsContent value="comunicacao" className="space-y-6">
+                <Card className="p-6">
+                  <CommunicationForm supabaseData={supabaseData} />
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="calendario" className="space-y-6">
-            <Card className="p-6">
-              <AcademicCalendar marcos={marcos} onAddMarco={addMarco} onDeleteMarco={deleteMarco} />
-            </Card>
-          </TabsContent>
+              <TabsContent value="calendario" className="space-y-6">
+                <Card className="p-6">
+                  <AcademicCalendar marcos={marcos} onAddMarco={addMarco} onDeleteMarco={deleteMarco} />
+                </Card>
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
     </div>

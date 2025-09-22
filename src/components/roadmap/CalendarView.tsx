@@ -97,7 +97,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   };
 
   // Função para verificar conflitos
-  const checkConflicts = (day: number, pessoa: string): ConflictoInfo => {
+  const checkConflicts = (day: number, pessoa: string): ConflictInfoSupabase => {
     const {
       year,
       month
@@ -133,8 +133,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     const marcosDoDay = marcos.filter(marco => targetDate >= marco.data_inicio && targetDate <= (marco.data_fim || marco.data_inicio));
 
     // Verificar comunicações existentes para a pessoa específica
-    const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => comm.data_inicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa.nome === pessoa));
-    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => comm.personas.some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p.nome.toLowerCase()))));
+    const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => comm.data_inicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa?.nome === pessoa));
+    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => 
+      (comm.personas || []).some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p?.nome?.toLowerCase() || ''))
+    ));
     let recomendacao = '';
     if (marcosDoDay.some(m => ['PROVA AV', 'PROVA AVS'].includes(m.nome))) {
       recomendacao = 'Em momento de PROVA AV/AVS, recomenda-se evitar personas: ausente, sem foco, parado, interessado, evolução.';
@@ -186,7 +188,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const filteredPessoas = filters.pessoa === 'Todos' ? supabaseData.pessoas.map(p => p.nome) : [filters.pessoa];
 
   // Função para obter marcos que se estendem por múltiplos dias
-  const getMarcoSpan = (marco: any, day: number) => {
+  const getMarcoSpan = (marco: Marco, day: number) => {
     const {
       year,
       month
@@ -216,8 +218,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
         month: 11
       }
     }[selectedMonth];
-    const startDate = new Date(marco.dataInicio);
-    const endDate = new Date(marco.dataFim || marco.dataInicio);
+    const startDate = new Date(marco.data_inicio);
+    const endDate = new Date(marco.data_fim || marco.data_inicio);
     const currentDate = new Date(year, month, day);
     if (currentDate >= startDate && currentDate <= endDate) {
       // Calcular quantos dias o marco se estende a partir deste dia
@@ -380,7 +382,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                       {marco.modalidade} - {marco.maturidade}
                                     </div>
                                     <div className="text-sm">
-                                      {marco.dataInicio} {marco.dataFim && marco.dataFim !== marco.dataInicio && `até ${marco.dataFim}`}
+                                      {marco.data_inicio} {marco.data_fim && marco.data_fim !== marco.data_inicio && `até ${marco.data_fim}`}
                                     </div>
                                   </div>
                                 </TooltipContent>
@@ -415,9 +417,9 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-wrap gap-1">
                                     {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => <div key={comunicacao.id} className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold relative" style={{
-                              backgroundColor: supabaseData.personas.find(p => comunicacao.personas.some(cp => cp.nome === p.nome))?.cor || '#666'
+                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
                             }}>
-                                        {comunicacao.pessoa.nome.charAt(0)}
+                                        {comunicacao.pessoa?.nome?.charAt(0) || '?'}
                                         {conflictInfo.comunicacoes.length > 1 && index === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
                                             {conflictInfo.comunicacoes.length}
                                           </div>}
@@ -449,17 +451,17 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                       Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
                                     </div>
                                     {conflictInfo.comunicacoes.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1 border-b border-gray-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="flex-1">
-                                            <div>• <strong>{comunicacao.nomeAcao}</strong></div>
-                                            <div className="text-xs text-gray-600 ml-2">
-                                              Persona: {comunicacao.persona.join(', ')}<br />
-                                              Categoria: {comunicacao.categoria}<br />
-                                              Instituição: {comunicacao.instituicao}<br />
-                                              Tipo: {comunicacao.tipoDisparo}
-                                              {comunicacao.canais.length > 0 && <><br />Canais: {comunicacao.canais.join(', ')}</>}
-                                            </div>
-                                          </div>
+                                         <div className="flex items-start justify-between gap-2">
+                                           <div className="flex-1">
+                                             <div>• <strong>{comunicacao.nome_acao}</strong></div>
+                                             <div className="text-xs text-gray-600 ml-2">
+                                               Persona: {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}<br />
+                                               Categoria: {comunicacao.categoria?.nome}<br />
+                                               Instituição: {comunicacao.instituicao?.nome}<br />
+                                               Tipo: {comunicacao.tipo_disparo}
+                                               {(comunicacao.canais || []).length > 0 && <><br />Canais: {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}</>}
+                                             </div>
+                                           </div>
                                           <Button
                                             variant="ghost"
                                             size="sm"

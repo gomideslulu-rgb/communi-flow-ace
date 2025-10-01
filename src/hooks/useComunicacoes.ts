@@ -28,7 +28,7 @@ export function useComunicacoes() {
           instituicao_id: formData.instituicao_id,
           tipo_disparo: formData.tipo_disparo,
           data_inicio: formData.data_inicio,
-          data_fim: formData.data_fim,
+          data_fim: formData.data_fim || null,
           repiques: formData.repiques,
           ativo: formData.ativo
         }])

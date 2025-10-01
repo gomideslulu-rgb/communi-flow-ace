@@ -354,7 +354,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   {days.map(day => {
                     const conflictInfo = checkConflicts(day, 'Todos');
                     const marcos = conflictInfo.marcos;
-                    return <div key={day} className="border border-gray-200 min-h-[60px] relative">
+                    return <div key={day} className="min-h-[60px] relative">
                           {marcos.map((marco, index) => {
                         const span = getMarcoSpan(marco, day);
                         if (span <= 0) return null;

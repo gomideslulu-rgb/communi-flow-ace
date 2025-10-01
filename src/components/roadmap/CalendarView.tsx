@@ -426,13 +426,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                       </div>)}
                                   </div>}
 
-                                {/* Marcos Acadêmicos - posicionados abaixo das comunicações */}
-                                {hasMarcos && <div className={`absolute bottom-1 left-1 right-1 ${conflictInfo.comunicacoes.length > 0 ? 'top-8' : 'top-1'}`}>
-                                    {conflictInfo.marcos.slice(0, 2).map((marco, index) => <div key={marco.id} className="h-1 rounded mb-0.5" style={{
-                              backgroundColor: marco.cor
-                            }} title={marco.nome} />)}
-                                  </div>}
-
                                 {conflictInfo.temConflito && <AlertTriangle className="absolute top-1 right-1 h-3 w-3 text-red-500" />}
 
                                 {available && !hasMarcos && <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}

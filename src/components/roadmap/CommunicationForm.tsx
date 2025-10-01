@@ -168,6 +168,21 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       : formData.persona_ids.filter(id => id !== personaId);
     
     setFormData({ ...formData, persona_ids: updatedPersonas });
+
+    // Verificar se adicionou personas "ausente" ou "sem foco"
+    if (checked) {
+      const persona = supabaseData.personas.find(p => p.id === personaId);
+      const personaNome = persona?.nome?.toLowerCase() || '';
+      
+      if (personaNome.includes('ausente') || personaNome.includes('sem foco')) {
+        toast({
+          title: "⚠️ Atenção",
+          description: `Persona "${persona?.nome}" selecionada. Recomenda-se evitar comunicações com esta persona em períodos de PROVA AV/AVS.`,
+          variant: "default",
+          duration: 5000,
+        });
+      }
+    }
   };
 
   const addPerson = async () => {

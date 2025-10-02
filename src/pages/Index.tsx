@@ -1,14 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RoadmapContainer } from '@/components/roadmap/RoadmapContainer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const [isVisitor, setIsVisitor] = useState(false);
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
+  // Se o usuário está autenticado, mostrar o roadmap completo
+  useEffect(() => {
+    if (user && !isVisitor) {
+      // Usuário autenticado vê o roadmap completo
+    }
+  }, [user, isVisitor]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se usuário autenticado, mostrar roadmap completo
+  if (user) {
+    return <RoadmapContainer visitorMode={false} />;
+  }
+
+  // Se modo visitante, mostrar roadmap em modo visitante
   if (isVisitor) {
     return <RoadmapContainer visitorMode={true} />;
   }

@@ -368,8 +368,9 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           'Novembro 2025': { year: 2025, month: 10 },
                           'Dezembro 2025': { year: 2025, month: 11 }
                         }[selectedMonth];
-                        const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                        const isFirstDay = targetDate === marco.data_inicio;
+                        const currentDate = new Date(year, month, day);
+                        const marcoStartDate = new Date(marco.data_inicio);
+                        const isFirstDay = currentDate.getTime() === marcoStartDate.getTime();
                         
                         if (!isFirstDay) return null;
                         

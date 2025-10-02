@@ -358,6 +358,22 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           {marcos.map((marco, index) => {
                         const span = getMarcoSpan(marco, day);
                         if (span <= 0) return null;
+                        
+                        // Só renderizar o marco no primeiro dia
+                        const {year, month} = {
+                          'Julho 2025': { year: 2025, month: 6 },
+                          'Agosto 2025': { year: 2025, month: 7 },
+                          'Setembro 2025': { year: 2025, month: 8 },
+                          'Outubro 2025': { year: 2025, month: 9 },
+                          'Novembro 2025': { year: 2025, month: 10 },
+                          'Dezembro 2025': { year: 2025, month: 11 }
+                        }[selectedMonth];
+                        const currentDate = new Date(year, month, day);
+                        const marcoStartDate = new Date(marco.data_inicio);
+                        const isFirstDay = currentDate.getTime() === marcoStartDate.getTime();
+                        
+                        if (!isFirstDay) return null;
+                        
                         return <Tooltip key={`${marco.id}-${day}`}>
                                 <TooltipTrigger asChild>
                                   <div 

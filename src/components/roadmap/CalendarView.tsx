@@ -33,24 +33,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const { toast } = useToast();
-  
-  // Determinar o mês atual
-  const getCurrentMonth = () => {
-    const now = new Date();
-    const currentMonth = now.getMonth(); // 0-11
-    const currentYear = now.getFullYear();
-    
-    // Se estamos em 2025 e entre julho (6) e dezembro (11)
-    if (currentYear === 2025 && currentMonth >= 6 && currentMonth <= 11) {
-      const monthNames = ['Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      return `${monthNames[currentMonth - 6]} 2025`;
-    }
-    
-    // Default para Outubro 2025 se estiver fora do range
-    return 'Outubro 2025';
-  };
-  
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [selectedMonth, setSelectedMonth] = useState('Setembro 2025');
   const [filters, setFilters] = useState({
     pessoa: 'Todos',
     categoria: 'Todos'

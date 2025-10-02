@@ -4,10 +4,12 @@ import { CalendarView } from './CalendarView';
 import { CommunicationForm } from './CommunicationForm';
 import { AcademicCalendar } from './AcademicCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Plus, GraduationCap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Plus, GraduationCap, ArrowLeft } from 'lucide-react';
 import { UserMenu } from '@/components/ui/user-menu';
 import { useMarcos } from '@/hooks/useMarcos';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useNavigate } from 'react-router-dom';
 
 interface RoadmapContainerProps {
   visitorMode?: boolean;
@@ -16,12 +18,23 @@ interface RoadmapContainerProps {
 export function RoadmapContainer({ visitorMode = false }: RoadmapContainerProps) {
   const { marcos, addMarco, deleteMarco } = useMarcos();
   const supabaseData = useSupabaseData();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex justify-between items-start">
-          <div className="text-center flex-1 space-y-2">
+          {visitorMode && (
+            <Button
+              onClick={() => navigate('/')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+          )}
+          <div className={`text-center space-y-2 ${visitorMode ? 'flex-1' : 'flex-1'}`}>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Roadmap de Comunicação
             </h1>

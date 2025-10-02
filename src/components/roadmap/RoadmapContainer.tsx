@@ -9,7 +9,11 @@ import { UserMenu } from '@/components/ui/user-menu';
 import { useMarcos } from '@/hooks/useMarcos';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 
-export function RoadmapContainer() {
+interface RoadmapContainerProps {
+  visitorMode?: boolean;
+}
+
+export function RoadmapContainer({ visitorMode = false }: RoadmapContainerProps) {
   const { marcos, addMarco, deleteMarco } = useMarcos();
   const supabaseData = useSupabaseData();
 
@@ -22,44 +26,51 @@ export function RoadmapContainer() {
               Roadmap de Comunicação
             </h1>
             <p className="text-muted-foreground">
-              Gerencie comunicações acadêmicas com inteligência e eficiência
+              {visitorMode 
+                ? "Visualizando como visitante - Apenas leitura"
+                : "Gerencie comunicações acadêmicas com inteligência e eficiência"
+              }
             </p>
           </div>
-          <UserMenu />
+          {!visitorMode && <UserMenu />}
         </header>
 
-        <Tabs defaultValue="roadmap" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="roadmap" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Roadmap
-            </TabsTrigger>
-            <TabsTrigger value="comunicacao" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Comunicação
-            </TabsTrigger>
-            <TabsTrigger value="calendario" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Calendário Acadêmico
-            </TabsTrigger>
-          </TabsList>
+        {visitorMode ? (
+          <CalendarView marcos={marcos} supabaseData={supabaseData} />
+        ) : (
+          <Tabs defaultValue="roadmap" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="roadmap" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Roadmap
+              </TabsTrigger>
+              <TabsTrigger value="comunicacao" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Comunicação
+              </TabsTrigger>
+              <TabsTrigger value="calendario" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Calendário Acadêmico
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="roadmap" className="space-y-6">
-            <CalendarView marcos={marcos} supabaseData={supabaseData} />
-          </TabsContent>
+            <TabsContent value="roadmap" className="space-y-6">
+              <CalendarView marcos={marcos} supabaseData={supabaseData} />
+            </TabsContent>
 
-          <TabsContent value="comunicacao" className="space-y-6">
-            <Card className="p-6">
-              <CommunicationForm supabaseData={supabaseData} />
-            </Card>
-          </TabsContent>
+            <TabsContent value="comunicacao" className="space-y-6">
+              <Card className="p-6">
+                <CommunicationForm supabaseData={supabaseData} />
+              </Card>
+            </TabsContent>
 
-          <TabsContent value="calendario" className="space-y-6">
-            <Card className="p-6">
-              <AcademicCalendar marcos={marcos} onAddMarco={addMarco} onDeleteMarco={deleteMarco} />
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="calendario" className="space-y-6">
+              <Card className="p-6">
+                <AcademicCalendar marcos={marcos} onAddMarco={addMarco} onDeleteMarco={deleteMarco} />
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

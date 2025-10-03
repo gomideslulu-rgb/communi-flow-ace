@@ -52,14 +52,10 @@ export function RoadmapContainer({ visitorMode = false }: RoadmapContainerProps)
           <CalendarView marcos={marcos} supabaseData={supabaseData} />
         ) : (
           <Tabs defaultValue="roadmap" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="roadmap" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Roadmap
-              </TabsTrigger>
-              <TabsTrigger value="comunicacao" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Comunicação
               </TabsTrigger>
               <TabsTrigger value="calendario" className="flex items-center gap-2">
                 <GraduationCap className="h-4 w-4" />
@@ -69,12 +65,6 @@ export function RoadmapContainer({ visitorMode = false }: RoadmapContainerProps)
 
             <TabsContent value="roadmap" className="space-y-6">
               <CalendarView marcos={marcos} supabaseData={supabaseData} />
-            </TabsContent>
-
-            <TabsContent value="comunicacao" className="space-y-6">
-              <Card className="p-6">
-                <CommunicationForm supabaseData={supabaseData} />
-              </Card>
             </TabsContent>
 
             <TabsContent value="calendario" className="space-y-6">

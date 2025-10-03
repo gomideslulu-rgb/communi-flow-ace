@@ -359,7 +359,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   </div>
                 </div>
 
-                {/* Marcos Acadêmicos */}
+                 {/* Marcos Acadêmicos */}
                 <div className="grid grid-cols-[200px_1fr] gap-0 mb-4">
                   <div className="bg-blue-50 p-2 font-medium border text-blue-700">
                     MARCOS
@@ -370,9 +370,9 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                 }}>
                   {days.map(day => {
                     const conflictInfo = checkConflicts(day, 'Todos');
-                    const marcos = conflictInfo.marcos;
-                    return <div key={day} className="min-h-[60px] relative">
-                          {marcos.map((marco, index) => {
+                    const marcosDoDay = conflictInfo.marcos;
+                    return <div key={day} className="min-h-[60px] relative border-r border-gray-200">
+                          {marcosDoDay.map((marco, index) => {
                         const span = getMarcoSpan(marco, day);
                         if (span <= 0) return null;
                         
@@ -399,7 +399,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                       color: 'white',
                                       width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
                                       top: `${2 + index * 16}px`,
-                                      fontSize: '10px'
+                                      fontSize: '10px',
+                                      zIndex: 10
                                     }}
                                   >
                                     <span className="truncate px-1">
@@ -446,16 +447,42 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                   ${weekend ? 'bg-gray-100' : ''}
                                   ${available ? 'hover:bg-green-50' : ''}
                                 `}>
-                                {/* Comunicações */}
-                                {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-wrap gap-1">
-                                    {conflictInfo.comunicacoes.slice(0, 2).map((comunicacao, index) => <div key={comunicacao.id} className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold relative" style={{
-                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                            }}>
-                                        {comunicacao.pessoa?.nome?.charAt(0) || '?'}
-                                        {conflictInfo.comunicacoes.length > 1 && index === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-                                            {conflictInfo.comunicacoes.length}
-                                          </div>}
-                                      </div>)}
+                                 {/* Comunicações */}
+                                {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-col gap-1">
+                                    {conflictInfo.comunicacoes.map((comunicacao, index) => {
+                                      const isReguaAberta = comunicacao.tipo_disparo === 'Régua Aberta';
+                                      
+                                      if (isReguaAberta) {
+                                        // Régua Aberta: linha horizontal fina
+                                        return (
+                                          <div 
+                                            key={comunicacao.id} 
+                                            className="h-1 w-full rounded-full"
+                                            style={{
+                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                            }}
+                                          />
+                                        );
+                                      } else {
+                                        // Pontual e Régua Fechada: quadrado
+                                        return (
+                                          <div 
+                                            key={comunicacao.id} 
+                                            className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                                            style={{
+                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                            }}
+                                          >
+                                            {comunicacao.pessoa?.nome?.charAt(0) || '?'}
+                                          </div>
+                                        );
+                                      }
+                                    })}
+                                    {conflictInfo.comunicacoes.length > 1 && (
+                                      <div className="text-xs text-red-600 font-bold">
+                                        {conflictInfo.comunicacoes.length}x
+                                      </div>
+                                    )}
                                   </div>}
 
                                 {conflictInfo.temConflito && <AlertTriangle className="absolute top-1 right-1 h-3 w-3 text-red-500" />}

@@ -386,9 +386,14 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           'Dezembro 2025': { year: 2025, month: 11 }
                         }[selectedMonth];
                         const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                        const isFirstDay = targetDate === marco.data_inicio;
+                        const currentDateObj = new Date(year, month, day);
+                        const prevDateObj = new Date(year, month, day - 1);
+                        const startDate = new Date(marco.data_inicio);
+                        const endDate = new Date(marco.data_fim || marco.data_inicio);
+                        const isWithin = currentDateObj >= startDate && currentDateObj <= endDate;
+                        const isFirstVisibleDay = isWithin && (day === 1 || prevDateObj < startDate);
                         
-                        if (!isFirstDay) return null;
+                        if (!isFirstVisibleDay) return null;
                         
                         return <Tooltip key={`${marco.id}-${day}`}>
                                 <TooltipTrigger asChild>
@@ -457,7 +462,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                         return (
                                           <div 
                                             key={comunicacao.id} 
-                                            className="h-1 w-full rounded-full"
+                                            className="h-3 w-full rounded"
                                             style={{
                                               backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
                                             }}

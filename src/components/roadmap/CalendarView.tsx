@@ -454,35 +454,36 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 `}>
                                  {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-col gap-1">
-                                    {conflictInfo.comunicacoes.map((comunicacao, index) => {
-                                      const isReguaAberta = comunicacao.tipo_disparo === 'Régua Aberta';
-                                      
-                                      if (isReguaAberta) {
-                                        // Régua Aberta: linha horizontal fina
-                                        return (
-                                          <div 
-                                            key={comunicacao.id} 
-                                            className="h-3 w-full rounded"
-                                            style={{
-                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                            }}
-                                          />
-                                        );
-                                      } else {
-                                        // Pontual e Régua Fechada: quadrado
-                                        return (
-                                          <div 
-                                            key={comunicacao.id} 
-                                            className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-                                            style={{
-                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                            }}
-                                          >
-                                            {comunicacao.pessoa?.nome?.charAt(0) || '?'}
-                                          </div>
-                                        );
-                                      }
-                                    })}
+                                    {/* Régua Aberta: linhas no topo */}
+                                    {conflictInfo.comunicacoes
+                                      .filter(c => c.tipo_disparo === 'Régua Aberta')
+                                      .map((comunicacao) => (
+                                        <div 
+                                          key={comunicacao.id} 
+                                          className="h-3 w-full rounded"
+                                          style={{
+                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                          }}
+                                        />
+                                      ))
+                                    }
+                                    
+                                    {/* Pontual e Régua Fechada: quadrados abaixo */}
+                                    {conflictInfo.comunicacoes
+                                      .filter(c => c.tipo_disparo !== 'Régua Aberta')
+                                      .map((comunicacao) => (
+                                        <div 
+                                          key={comunicacao.id} 
+                                          className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                                          style={{
+                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                          }}
+                                        >
+                                          {comunicacao.pessoa?.nome?.charAt(0) || '?'}
+                                        </div>
+                                      ))
+                                    }
+                                    
                                     {conflictInfo.comunicacoes.length > 1 && (
                                       <div className="text-xs text-red-600 font-bold">
                                         {conflictInfo.comunicacoes.length}x

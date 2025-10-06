@@ -454,13 +454,13 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 `}>
                                  {/* Comunicações */}
                                 {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-col gap-1">
-                                    {/* Régua Aberta: linhas no topo */}
+                                    {/* Régua Aberta: linha única horizontal (igual ao marco) */}
                                     {conflictInfo.comunicacoes
                                       .filter(c => c.tipo_disparo === 'Régua Aberta')
                                       .map((comunicacao) => (
                                         <div 
                                           key={comunicacao.id} 
-                                          className="h-3 w-full rounded"
+                                          className="h-2 w-full"
                                           style={{
                                             backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
                                           }}

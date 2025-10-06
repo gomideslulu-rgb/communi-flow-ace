@@ -245,6 +245,54 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     }
     return 0;
   };
+
+  // Span de Régua Aberta (barra contínua como marco)
+  const getReguaSpan = (com: ComunicacaoDetalhada, day: number) => {
+    const { year, month } = {
+      'Julho 2025': { year: 2025, month: 6 },
+      'Agosto 2025': { year: 2025, month: 7 },
+      'Setembro 2025': { year: 2025, month: 8 },
+      'Outubro 2025': { year: 2025, month: 9 },
+      'Novembro 2025': { year: 2025, month: 10 },
+      'Dezembro 2025': { year: 2025, month: 11 }
+    }[selectedMonth];
+
+    const startDate = new Date(com.data_inicio);
+    // Para Régua Aberta sem data_fim, considerar até o fim do mês corrente
+    const monthEnd = new Date(year, month + 1, 0);
+    const endDate = new Date(com.data_fim || monthEnd.toISOString().slice(0,10));
+    const currentDate = new Date(year, month, day);
+
+    if (currentDate >= startDate && currentDate <= endDate) {
+      const remainingDays = Math.min(
+        Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+        days.length - day + 1
+      );
+      return remainingDays > 1 ? remainingDays : 1;
+    }
+    return 0;
+  };
+
+  const isFirstVisibleDayRegua = (com: ComunicacaoDetalhada, day: number) => {
+    const { year, month } = {
+      'Julho 2025': { year: 2025, month: 6 },
+      'Agosto 2025': { year: 2025, month: 7 },
+      'Setembro 2025': { year: 2025, month: 8 },
+      'Outubro 2025': { year: 2025, month: 9 },
+      'Novembro 2025': { year: 2025, month: 10 },
+      'Dezembro 2025': { year: 2025, month: 11 }
+    }[selectedMonth];
+
+    const currentDateObj = new Date(year, month, day);
+    const prevDateObj = new Date(year, month, day - 1);
+    const startDate = new Date(com.data_inicio);
+    const monthEnd = new Date(year, month + 1, 0);
+    const endDate = new Date(com.data_fim || monthEnd.toISOString().slice(0,10));
+
+    const isWithin = currentDateObj >= startDate && currentDateObj <= endDate;
+    return isWithin && (day === 1 || prevDateObj < startDate);
+  };
+
   return <TooltipProvider>
       <div className="space-y-6">
         {/* Filtros */}
@@ -453,43 +501,54 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                   ${available ? 'hover:bg-green-50' : ''}
                                 `}>
                                  {/* Comunicações */}
-                                {conflictInfo.comunicacoes.length > 0 && <div className="flex flex-col gap-1">
-                                    {/* Régua Aberta: linha única horizontal (igual ao marco) */}
+                                {conflictInfo.comunicacoes.length > 0 && (
+                                  <>
                                     {conflictInfo.comunicacoes
                                       .filter(c => c.tipo_disparo === 'Régua Aberta')
-                                      .map((comunicacao) => (
-                                        <div 
-                                          key={comunicacao.id} 
-                                          className="h-2 w-full"
-                                          style={{
-                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                          }}
-                                        />
-                                      ))
-                                    }
-                                    
-                                    {/* Pontual e Régua Fechada: quadrados abaixo */}
-                                    {conflictInfo.comunicacoes
-                                      .filter(c => c.tipo_disparo !== 'Régua Aberta')
-                                      .map((comunicacao) => (
-                                        <div 
-                                          key={comunicacao.id} 
-                                          className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-                                          style={{
-                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                          }}
-                                        >
-                                          {comunicacao.pessoa?.nome?.charAt(0) || '?'}
-                                        </div>
-                                      ))
-                                    }
-                                    
-                                    {conflictInfo.comunicacoes.length > 1 && (
-                                      <div className="text-xs text-red-600 font-bold">
-                                        {conflictInfo.comunicacoes.length}x
-                                      </div>
-                                    )}
-                                  </div>}
+                                      .map((comunicacao, idx) => {
+                                        const span = getReguaSpan(comunicacao, day);
+                                        if (span <= 0) return null;
+                                        if (!isFirstVisibleDayRegua(comunicacao, day)) return null;
+                                        const color = supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666';
+                                        return (
+                                          <div 
+                                            key={comunicacao.id} 
+                                            className="absolute left-0 h-2"
+                                            style={{
+                                              backgroundColor: color,
+                                              width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
+                                              top: `${2 + idx * 8}px`,
+                                              zIndex: 20,
+                                              pointerEvents: 'none'
+                                            }}
+                                          />
+                                        );
+                                      })}
+
+                                    <div className="flex flex-col gap-1 pt-3">
+                                      {/* Pontual e Régua Fechada: quadrados abaixo */}
+                                      {conflictInfo.comunicacoes
+                                        .filter(c => c.tipo_disparo !== 'Régua Aberta')
+                                        .map((comunicacao) => (
+                                          <div 
+                                            key={comunicacao.id} 
+                                            className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                                            style={{
+                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                            }}
+                                          >
+                                            {comunicacao.pessoa?.nome?.charAt(0) || '?'}
+                                          </div>
+                                        ))
+                                      }
+                                    </div>
+                                  </>
+                                )}
+                                {conflictInfo.comunicacoes.length > 1 && (
+                                  <div className="text-xs text-red-600 font-bold">
+                                    {conflictInfo.comunicacoes.length}x
+                                  </div>
+                                )}
 
                                 {conflictInfo.temConflito && <AlertTriangle className="absolute top-1 right-1 h-3 w-3 text-red-500" />}
 

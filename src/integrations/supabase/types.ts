@@ -137,6 +137,7 @@ export type Database = {
           nome_acao: string
           pessoa_id: string
           repiques: string[] | null
+          safras: string[] | null
           tipo_disparo: Database["public"]["Enums"]["tipo_disparo"]
           updated_at: string
         }
@@ -151,6 +152,7 @@ export type Database = {
           nome_acao: string
           pessoa_id: string
           repiques?: string[] | null
+          safras?: string[] | null
           tipo_disparo?: Database["public"]["Enums"]["tipo_disparo"]
           updated_at?: string
         }
@@ -165,6 +167,7 @@ export type Database = {
           nome_acao?: string
           pessoa_id?: string
           repiques?: string[] | null
+          safras?: string[] | null
           tipo_disparo?: Database["public"]["Enums"]["tipo_disparo"]
           updated_at?: string
         }

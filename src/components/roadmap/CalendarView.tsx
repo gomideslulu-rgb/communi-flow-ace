@@ -150,14 +150,55 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     const marcosDoDay = marcos.filter(marco => targetDate >= marco.data_inicio && targetDate <= (marco.data_fim || marco.data_inicio));
 
     // Verificar comunicações existentes para a pessoa específica
-    const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => comm.data_inicio === targetDate && comm.ativo && (pessoa === 'Todos' || comm.pessoa?.nome === pessoa));
-    const temConflito = marcosDoDay.some(marco => ['PROVA AV', 'PROVA AVS'].includes(marco.nome) && comunicacoesDoDay.some(comm => 
-      (comm.personas || []).some(p => ['ausente', 'sem foco', 'parado', 'interessado', 'evolução'].includes(p?.nome?.toLowerCase() || ''))
-    ));
+    const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => 
+      comm.data_inicio === targetDate && 
+      comm.ativo && 
+      (pessoa === 'Todos' || comm.pessoa?.nome === pessoa)
+    );
+
+    // NOVA LÓGICA DE CONFLITO:
+    // Só mostrar ! se houver comunicações no mesmo dia que compartilhem:
+    // - Mesmo período (safra)
+    // - Mesma instituição
+    // - Mesma persona
+    let temConflito = false;
+    
+    if (comunicacoesDoDay.length > 1) {
+      // Verificar se há sobreposição de período + instituição + persona
+      for (let i = 0; i < comunicacoesDoDay.length; i++) {
+        for (let j = i + 1; j < comunicacoesDoDay.length; j++) {
+          const comm1 = comunicacoesDoDay[i];
+          const comm2 = comunicacoesDoDay[j];
+          
+          // Verificar se há safras em comum
+          const safrasComum = (comm1.safras || []).some(s1 => 
+            (comm2.safras || []).includes(s1)
+          );
+          
+          // Verificar se é a mesma instituição
+          const mesmaInstituicao = comm1.instituicao_id === comm2.instituicao_id;
+          
+          // Verificar se há personas em comum
+          const personasComum = (comm1.personas || []).some(p1 => 
+            (comm2.personas || []).some(p2 => p1?.id === p2?.id)
+          );
+          
+          if (safrasComum && mesmaInstituicao && personasComum) {
+            temConflito = true;
+            break;
+          }
+        }
+        if (temConflito) break;
+      }
+    }
+
     let recomendacao = '';
-    if (marcosDoDay.some(m => ['PROVA AV', 'PROVA AVS'].includes(m.nome))) {
+    if (temConflito) {
+      recomendacao = 'Conflito: Múltiplas comunicações com mesmo período, instituição e persona neste dia.';
+    } else if (marcosDoDay.some(m => ['PROVA AV', 'PROVA AVS'].includes(m.nome))) {
       recomendacao = 'Em momento de PROVA AV/AVS, recomenda-se evitar personas: ausente, sem foco, parado, interessado, evolução.';
     }
+    
     return {
       temConflito,
       marcos: marcosDoDay,

@@ -42,7 +42,8 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
     data_fim: '',
     canal_ids: [],
     repiques: [],
-    ativo: true
+    ativo: true,
+    safras: []
   });
 
   const [customRepique, setCustomRepique] = useState('');
@@ -53,10 +54,10 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length) {
+    if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length || !formData.safras?.length) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios (pessoa, categoria, instituição, persona e período)",
         variant: "destructive"
       });
       return;
@@ -86,7 +87,8 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
         data_fim: '',
         canal_ids: [],
         repiques: [],
-        ativo: true
+        ativo: true,
+        safras: []
       });
     } catch (error) {
       // Error already handled in hook
@@ -111,7 +113,8 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
         data_fim: '',
         canal_ids: [],
         repiques: [],
-        ativo: true
+        ativo: true,
+        safras: []
       });
     } catch (error) {
       // Error already handled in hook
@@ -183,6 +186,19 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
         });
       }
     }
+  };
+
+  const handleSelectAllPersonas = () => {
+    const allPersonaIds = supabaseData.personas.map(p => p.id);
+    setFormData({ ...formData, persona_ids: allPersonaIds });
+  };
+
+  const handleSafraChange = (safra: string, checked: boolean) => {
+    const updatedSafras = checked
+      ? [...formData.safras, safra]
+      : formData.safras.filter(s => s !== safra);
+    
+    setFormData({ ...formData, safras: updatedSafras });
   };
 
   const addPerson = async () => {
@@ -320,7 +336,17 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Persona *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Persona *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAllPersonas}
+                    >
+                      Selecionar Todos
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {supabaseData.personas.map(persona => (
                       <div key={persona.id} className="flex items-center space-x-2">
@@ -336,6 +362,22 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
                           />
                           {persona.nome}
                         </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Período/Safra *</Label>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                    {['25.2', '25.3', '25.4', '26.1', '26.2', '26.3'].map(safra => (
+                      <div key={safra} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={safra}
+                          checked={formData.safras.includes(safra)}
+                          onCheckedChange={(checked) => handleSafraChange(safra, !!checked)}
+                        />
+                        <Label htmlFor={safra}>{safra}</Label>
                       </div>
                     ))}
                   </div>

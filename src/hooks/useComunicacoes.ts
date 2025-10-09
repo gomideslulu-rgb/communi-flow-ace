@@ -13,6 +13,7 @@ export interface ComunicacaoForm {
   repiques: string[];
   canal_ids: string[];
   ativo: boolean;
+  safras: string[];
 }
 
 export function useComunicacoes() {
@@ -36,7 +37,8 @@ export function useComunicacoes() {
           data_inicio: formData.data_inicio,
           data_fim: formData.data_fim,
           repiques: formData.repiques,
-          ativo: formData.ativo
+          ativo: formData.ativo,
+          safras: formData.safras
         });
 
         // Comunicações nos repiques (data início + X dias)
@@ -59,7 +61,8 @@ export function useComunicacoes() {
               data_inicio: dataRepiqueFormatada,
               data_fim: formData.data_fim,
               repiques: formData.repiques,
-              ativo: formData.ativo
+              ativo: formData.ativo,
+              safras: formData.safras
             });
           }
         });
@@ -75,7 +78,8 @@ export function useComunicacoes() {
             data_inicio: formData.data_fim,
             data_fim: formData.data_fim,
             repiques: formData.repiques,
-            ativo: formData.ativo
+            ativo: formData.ativo,
+            safras: formData.safras
           });
         }
       } else if (formData.tipo_disparo === 'Régua Aberta' && formData.data_fim) {
@@ -97,7 +101,8 @@ export function useComunicacoes() {
             data_inicio: dataFormatada,
             data_fim: formData.data_fim,
             repiques: formData.repiques,
-            ativo: formData.ativo
+            ativo: formData.ativo,
+            safras: formData.safras
           });
           
           // Avançar para o próximo dia
@@ -114,7 +119,8 @@ export function useComunicacoes() {
           data_inicio: formData.data_inicio,
           data_fim: formData.data_fim || null,
           repiques: formData.repiques,
-          ativo: formData.ativo
+          ativo: formData.ativo,
+          safras: formData.safras
         });
       }
 

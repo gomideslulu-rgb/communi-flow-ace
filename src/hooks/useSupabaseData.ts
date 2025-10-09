@@ -39,9 +39,13 @@ export interface ComunicacaoDetalhada {
   tipo_disparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
   repiques: string[];
   ativo: boolean;
+  safras: string[];
   pessoa: Pessoa;
+  pessoa_id: string;
   categoria: Categoria;
+  categoria_id: string;
   instituicao: Instituicao;
+  instituicao_id: string;
   personas: Persona[];
   canais: Canal[];
 }
@@ -102,11 +106,15 @@ export function useSupabaseData() {
         data_inicio: com.data_inicio,
         data_fim: com.data_fim,
         tipo_disparo: com.tipo_disparo,
-        repiques: com.repiques,
+        repiques: com.repiques || [],
         ativo: com.ativo,
+        safras: com.safras || [],
         pessoa: com.pessoa,
+        pessoa_id: com.pessoa_id,
         categoria: com.categoria,
+        categoria_id: com.categoria_id,
         instituicao: com.instituicao,
+        instituicao_id: com.instituicao_id,
         personas: com.personas?.map((p: any) => p.persona) || [],
         canais: com.canais?.map((c: any) => c.canal) || []
       })) || [];

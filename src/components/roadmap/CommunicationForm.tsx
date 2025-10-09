@@ -12,7 +12,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';
 import { useComunicacoes, type ComunicacaoForm } from '@/hooks/useComunicacoes';
-
 interface CommunicationFormProps {
   supabaseData: {
     pessoas: any[];
@@ -27,10 +26,15 @@ interface CommunicationFormProps {
     refetch: () => Promise<void>;
   };
 }
-
-export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
-  const { toast } = useToast();
-  const { saveComunicacao } = useComunicacoes();
+export function CommunicationForm({
+  supabaseData
+}: CommunicationFormProps) {
+  const {
+    toast
+  } = useToast();
+  const {
+    saveComunicacao
+  } = useComunicacoes();
   const [formData, setFormData] = useState<ComunicacaoForm>({
     pessoa_id: '',
     nome_acao: '',
@@ -45,15 +49,12 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
     ativo: true,
     safras: []
   });
-
   const [customRepique, setCustomRepique] = useState('');
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [newPersonName, setNewPersonName] = useState('');
   const [showPersonManagement, setShowPersonManagement] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length || !formData.safras?.length) {
       toast({
         title: "Campos obrigatórios",
@@ -65,16 +66,14 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
 
     // Verificar conflitos
     const conflictInfo = checkDateConflicts(formData.data_inicio);
-    
     if (conflictInfo.temConflito) {
       setConflictDialogOpen(true);
       return;
     }
-
     try {
       await saveComunicacao(formData);
       await supabaseData.refetch();
-      
+
       // Reset form
       setFormData({
         pessoa_id: '',
@@ -94,13 +93,12 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       // Error already handled in hook
     }
   };
-
   const saveWithConflict = async () => {
     try {
       await saveComunicacao(formData);
       await supabaseData.refetch();
       setConflictDialogOpen(false);
-      
+
       // Reset form
       setFormData({
         pessoa_id: '',
@@ -123,17 +121,18 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
 
   // Função para verificar conflitos de datas
   const checkDateConflicts = (targetDate: string) => {
-    if (!targetDate) return { temConflito: false, marcos: [], comunicacoes: [], recomendacao: '' };
+    if (!targetDate) return {
+      temConflito: false,
+      marcos: [],
+      comunicacoes: [],
+      recomendacao: ''
+    };
 
     // Verificar marcos acadêmicos que coincide com a data
     const marcos = []; // Em implementação real, buscar marcos do Supabase
-    const comunicacoes = supabaseData.comunicacoes.filter(
-      comm => comm.data_inicio === targetDate && comm.ativo
-    );
-
+    const comunicacoes = supabaseData.comunicacoes.filter(comm => comm.data_inicio === targetDate && comm.ativo);
     const temConflito = false; // Lógica de conflito seria implementada aqui
     const recomendacao = '';
-
     return {
       temConflito,
       marcos,
@@ -141,7 +140,6 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       recomendacao
     };
   };
-
   const addRepique = () => {
     if (customRepique) {
       setFormData({
@@ -151,56 +149,55 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       setCustomRepique('');
     }
   };
-
   const removeRepique = (index: number) => {
     const newRepiques = formData.repiques.filter((_, i) => i !== index);
-    setFormData({ ...formData, repiques: newRepiques });
+    setFormData({
+      ...formData,
+      repiques: newRepiques
+    });
   };
-
   const handleChannelChange = (canalId: string, checked: boolean) => {
-    const updatedCanais = checked
-      ? [...formData.canal_ids, canalId]
-      : formData.canal_ids.filter(id => id !== canalId);
-    
-    setFormData({ ...formData, canal_ids: updatedCanais });
+    const updatedCanais = checked ? [...formData.canal_ids, canalId] : formData.canal_ids.filter(id => id !== canalId);
+    setFormData({
+      ...formData,
+      canal_ids: updatedCanais
+    });
   };
-
   const handlePersonaChange = (personaId: string, checked: boolean) => {
-    const updatedPersonas = checked
-      ? [...formData.persona_ids, personaId]
-      : formData.persona_ids.filter(id => id !== personaId);
-    
-    setFormData({ ...formData, persona_ids: updatedPersonas });
+    const updatedPersonas = checked ? [...formData.persona_ids, personaId] : formData.persona_ids.filter(id => id !== personaId);
+    setFormData({
+      ...formData,
+      persona_ids: updatedPersonas
+    });
 
     // Verificar se adicionou personas "ausente" ou "sem foco"
     if (checked) {
       const persona = supabaseData.personas.find(p => p.id === personaId);
       const personaNome = persona?.nome?.toLowerCase() || '';
-      
       if (personaNome.includes('ausente') || personaNome.includes('sem foco')) {
         toast({
           title: "⚠️ Atenção",
           description: `Persona "${persona?.nome}" selecionada. Recomenda-se evitar comunicações com esta persona em períodos de PROVA AV/AVS.`,
           variant: "default",
-          duration: 5000,
+          duration: 5000
         });
       }
     }
   };
-
   const handleSelectAllPersonas = () => {
     const allPersonaIds = supabaseData.personas.map(p => p.id);
-    setFormData({ ...formData, persona_ids: allPersonaIds });
+    setFormData({
+      ...formData,
+      persona_ids: allPersonaIds
+    });
   };
-
   const handleSafraChange = (safra: string, checked: boolean) => {
-    const updatedSafras = checked
-      ? [...formData.safras, safra]
-      : formData.safras.filter(s => s !== safra);
-    
-    setFormData({ ...formData, safras: updatedSafras });
+    const updatedSafras = checked ? [...formData.safras, safra] : formData.safras.filter(s => s !== safra);
+    setFormData({
+      ...formData,
+      safras: updatedSafras
+    });
   };
-
   const addPerson = async () => {
     if (newPersonName.trim()) {
       try {
@@ -212,7 +209,6 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       }
     }
   };
-
   const removePerson = async (pessoaId: string) => {
     try {
       await supabaseData.deletePessoa(pessoaId);
@@ -220,13 +216,10 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
       // Error already handled in hook
     }
   };
-
   if (supabaseData.loading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }
-
-  return (
-    <TooltipProvider>
+  return <TooltipProvider>
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -238,97 +231,80 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
                 <div className="space-y-2">
                   <Label htmlFor="pessoa">Pessoa *</Label>
                   <div className="flex gap-2">
-                    <Select value={formData.pessoa_id} onValueChange={(value) => setFormData({...formData, pessoa_id: value})}>
+                    <Select value={formData.pessoa_id} onValueChange={value => setFormData({
+                    ...formData,
+                    pessoa_id: value
+                  })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecionar pessoa" />
                       </SelectTrigger>
                       <SelectContent>
-                        {supabaseData.pessoas.map(pessoa => (
-                          <SelectItem key={pessoa.id} value={pessoa.id}>
+                        {supabaseData.pessoas.map(pessoa => <SelectItem key={pessoa.id} value={pessoa.id}>
                             {pessoa.nome}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPersonManagement(!showPersonManagement)}
-                    >
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowPersonManagement(!showPersonManagement)}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  {showPersonManagement && (
-                    <div className="space-y-2 p-4 border rounded">
+                  {showPersonManagement && <div className="space-y-2 p-4 border rounded">
                       <div className="flex gap-2">
-                        <Input
-                          value={newPersonName}
-                          onChange={(e) => setNewPersonName(e.target.value)}
-                          placeholder="Nova pessoa"
-                        />
+                        <Input value={newPersonName} onChange={e => setNewPersonName(e.target.value)} placeholder="Nova pessoa" />
                         <Button type="button" onClick={addPerson} size="sm">
                           Adicionar
                         </Button>
                       </div>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {supabaseData.pessoas.map(pessoa => (
-                          <div key={pessoa.id} className="flex justify-between items-center p-2 border rounded">
+                        {supabaseData.pessoas.map(pessoa => <div key={pessoa.id} className="flex justify-between items-center p-2 border rounded">
                             <span>{pessoa.nome}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePerson(pessoa.id)}
-                            >
+                            <Button type="button" variant="ghost" size="sm" onClick={() => removePerson(pessoa.id)}>
                               <X className="h-4 w-4" />
                             </Button>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="nome_acao">Nome da Ação</Label>
-                  <Input
-                    id="nome_acao"
-                    value={formData.nome_acao}
-                    onChange={(e) => setFormData({...formData, nome_acao: e.target.value})}
-                    placeholder="Digite o nome da ação"
-                  />
+                  <Input id="nome_acao" value={formData.nome_acao} onChange={e => setFormData({
+                  ...formData,
+                  nome_acao: e.target.value
+                })} placeholder="Digite o nome da ação" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria *</Label>
-                  <Select value={formData.categoria_id} onValueChange={(value) => setFormData({...formData, categoria_id: value})}>
+                  <Select value={formData.categoria_id} onValueChange={value => setFormData({
+                  ...formData,
+                  categoria_id: value
+                })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      {supabaseData.categorias.map(categoria => (
-                        <SelectItem key={categoria.id} value={categoria.id}>
+                      {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
                           {categoria.nome}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="instituicao">Instituição *</Label>
-                  <Select value={formData.instituicao_id} onValueChange={(value) => setFormData({...formData, instituicao_id: value})}>
+                  <Select value={formData.instituicao_id} onValueChange={value => setFormData({
+                  ...formData,
+                  instituicao_id: value
+                })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar instituição" />
                     </SelectTrigger>
                     <SelectContent>
-                      {supabaseData.instituicoes.map(instituicao => (
-                        <SelectItem key={instituicao.id} value={instituicao.id}>
+                      {supabaseData.instituicoes.map(instituicao => <SelectItem key={instituicao.id} value={instituicao.id}>
                           {instituicao.nome}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -338,55 +314,40 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Persona *</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSelectAllPersonas}
-                    >
+                    <Button type="button" variant="outline" size="sm" onClick={handleSelectAllPersonas}>
                       Selecionar Todos
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {supabaseData.personas.map(persona => (
-                      <div key={persona.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={persona.id}
-                          checked={formData.persona_ids.includes(persona.id)}
-                          onCheckedChange={(checked) => handlePersonaChange(persona.id, !!checked)}
-                        />
+                    {supabaseData.personas.map(persona => <div key={persona.id} className="flex items-center space-x-2">
+                        <Checkbox id={persona.id} checked={formData.persona_ids.includes(persona.id)} onCheckedChange={checked => handlePersonaChange(persona.id, !!checked)} />
                         <Label htmlFor={persona.id} className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: persona.cor }}
-                          />
+                          <div className="w-3 h-3 rounded-full" style={{
+                        backgroundColor: persona.cor
+                      }} />
                           {persona.nome}
                         </Label>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Período/Safra *</Label>
+                  <Label>Período*</Label>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                    {['25.2', '25.3', '25.4', '26.1', '26.2', '26.3'].map(safra => (
-                      <div key={safra} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={safra}
-                          checked={formData.safras.includes(safra)}
-                          onCheckedChange={(checked) => handleSafraChange(safra, !!checked)}
-                        />
+                    {['25.2', '25.3', '25.4', '26.1', '26.2', '26.3'].map(safra => <div key={safra} className="flex items-center space-x-2">
+                        <Checkbox id={safra} checked={formData.safras.includes(safra)} onCheckedChange={checked => handleSafraChange(safra, !!checked)} />
                         <Label htmlFor={safra}>{safra}</Label>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tipo_disparo">Tipo de Disparo</Label>
-                    <Select value={formData.tipo_disparo} onValueChange={(value) => setFormData({...formData, tipo_disparo: value as any})}>
+                    <Select value={formData.tipo_disparo} onValueChange={value => setFormData({
+                    ...formData,
+                    tipo_disparo: value as any
+                  })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -400,70 +361,46 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="data_inicio">Data de Início *</Label>
-                    <Input
-                      id="data_inicio"
-                      type="date"
-                      value={formData.data_inicio}
-                      onChange={(e) => setFormData({...formData, data_inicio: e.target.value})}
-                    />
+                    <Input id="data_inicio" type="date" value={formData.data_inicio} onChange={e => setFormData({
+                    ...formData,
+                    data_inicio: e.target.value
+                  })} />
                   </div>
 
-                  {(formData.tipo_disparo === 'Régua Fechada' || formData.tipo_disparo === 'Régua Aberta') && (
-                    <div className="space-y-2">
+                  {(formData.tipo_disparo === 'Régua Fechada' || formData.tipo_disparo === 'Régua Aberta') && <div className="space-y-2">
                       <Label htmlFor="data_fim">Data de Fim</Label>
-                      <Input
-                        id="data_fim"
-                        type="date"
-                        value={formData.data_fim}
-                        onChange={(e) => setFormData({...formData, data_fim: e.target.value})}
-                      />
-                    </div>
-                  )}
+                      <Input id="data_fim" type="date" value={formData.data_fim} onChange={e => setFormData({
+                    ...formData,
+                    data_fim: e.target.value
+                  })} />
+                    </div>}
                 </div>
 
-                {formData.tipo_disparo === 'Régua Fechada' && (
-                  <div className="space-y-2">
+                {formData.tipo_disparo === 'Régua Fechada' && <div className="space-y-2">
                     <Label>Repiques</Label>
                     <div className="flex gap-2">
-                      <Input
-                        value={customRepique}
-                        onChange={(e) => setCustomRepique(e.target.value)}
-                        placeholder="Ex: d+3, d+7, d+15"
-                      />
+                      <Input value={customRepique} onChange={e => setCustomRepique(e.target.value)} placeholder="Ex: d+3, d+7, d+15" />
                       <Button type="button" onClick={addRepique} variant="outline">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {formData.repiques.map((repique, index) => (
-                        <Badge key={index} variant="secondary" className="gap-1">
+                      {formData.repiques.map((repique, index) => <Badge key={index} variant="secondary" className="gap-1">
                           {repique}
-                          <button
-                            type="button"
-                            onClick={() => removeRepique(index)}
-                            className="ml-1 hover:text-destructive"
-                          >
+                          <button type="button" onClick={() => removeRepique(index)} className="ml-1 hover:text-destructive">
                             <X className="h-3 w-3" />
                           </button>
-                        </Badge>
-                      ))}
+                        </Badge>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="space-y-2">
                   <Label>Canais de Comunicação</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {supabaseData.canais.map(canal => (
-                      <div key={canal.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={canal.id}
-                          checked={formData.canal_ids.includes(canal.id)}
-                          onCheckedChange={(checked) => handleChannelChange(canal.id, !!checked)}
-                        />
+                    {supabaseData.canais.map(canal => <div key={canal.id} className="flex items-center space-x-2">
+                        <Checkbox id={canal.id} checked={formData.canal_ids.includes(canal.id)} onCheckedChange={checked => handleChannelChange(canal.id, !!checked)} />
                         <Label htmlFor={canal.id}>{canal.nome}</Label>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
               </div>
@@ -497,6 +434,5 @@ export function CommunicationForm({ supabaseData }: CommunicationFormProps) {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </TooltipProvider>
-  );
+    </TooltipProvider>;
 }

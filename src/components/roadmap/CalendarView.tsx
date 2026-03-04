@@ -10,6 +10,40 @@ import { useToast } from '@/hooks/use-toast';
 import { Marco } from '@/hooks/useMarcos';
 import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';
 
+// --- Helpers dinâmicos para meses ---
+const MONTH_NAMES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+function generateMonthList(): string[] {
+  // Gerar 18 meses: de Julho 2025 até Dezembro 2026
+  const months: string[] = [];
+  for (let y = 2025; y <= 2026; y++) {
+    const startM = y === 2025 ? 6 : 0; // Julho 2025 em diante; Janeiro 2026 em diante
+    const endM = 11;
+    for (let m = startM; m <= endM; m++) {
+      months.push(`${MONTH_NAMES[m]} ${y}`);
+    }
+  }
+  return months;
+}
+
+function parseMonth(label: string): { year: number; month: number } {
+  const parts = label.split(' ');
+  const year = parseInt(parts[1], 10);
+  const month = MONTH_NAMES.indexOf(parts[0]);
+  return { year, month };
+}
+
+function getCurrentMonthLabel(meses: string[]): string {
+  const now = new Date();
+  const label = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
+  if (meses.includes(label)) return label;
+  return meses[0];
+}
+
+// --- Interfaces ---
 interface ConflictInfoSupabase {
   temConflito: boolean;
   marcos: Marco[];
@@ -33,34 +67,17 @@ interface CalendarViewProps {
 
 export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const { toast } = useToast();
+  const meses = generateMonthList();
   
-  // Determinar o mês atual
-  const getCurrentMonth = () => {
-    const now = new Date();
-    const currentMonth = now.getMonth(); // 0-11
-    const currentYear = now.getFullYear();
-    
-    // Se estamos em 2025 e entre julho (6) e dezembro (11)
-    if (currentYear === 2025 && currentMonth >= 6 && currentMonth <= 11) {
-      const monthNames = ['Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      return `${monthNames[currentMonth - 6]} 2025`;
-    }
-    
-    // Default para Outubro 2025 se estiver fora do range
-    return 'Outubro 2025';
-  };
-  
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthLabel(meses));
   const [filters, setFilters] = useState({
     pessoa: 'Todos',
     categoria: 'Todos'
   });
   const [refreshKey, setRefreshKey] = useState(0);
-  const meses = ['Julho 2025', 'Agosto 2025', 'Setembro 2025', 'Outubro 2025', 'Novembro 2025', 'Dezembro 2025'];
   const pessoas = ['Todos', ...supabaseData.pessoas.map(p => p.nome)];
   const categorias = ['Todos', ...supabaseData.categorias.map(c => c.nome)];
 
-  // Função para excluir comunicação
   const handleDeleteComunicacao = async (comunicacaoId: string) => {
     try {
       await supabaseData.deleteComunicacao(comunicacaoId);
@@ -70,115 +87,36 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     }
   };
 
-  // Função para gerar os dias do mês
   const generateTimelineDays = () => {
-    const monthMap: {
-      [key: string]: {
-        year: number;
-        month: number;
-      };
-    } = {
-      'Julho 2025': {
-        year: 2025,
-        month: 6
-      },
-      'Agosto 2025': {
-        year: 2025,
-        month: 7
-      },
-      'Setembro 2025': {
-        year: 2025,
-        month: 8
-      },
-      'Outubro 2025': {
-        year: 2025,
-        month: 9
-      },
-      'Novembro 2025': {
-        year: 2025,
-        month: 10
-      },
-      'Dezembro 2025': {
-        year: 2025,
-        month: 11
-      }
-    };
-    const {
-      year,
-      month
-    } = monthMap[selectedMonth];
+    const { year, month } = parseMonth(selectedMonth);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    return Array.from({
-      length: daysInMonth
-    }, (_, i) => i + 1);
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
   };
 
-  // Função para verificar conflitos
   const checkConflicts = (day: number, pessoa: string): ConflictInfoSupabase => {
-    const {
-      year,
-      month
-    } = {
-      'Julho 2025': {
-        year: 2025,
-        month: 6
-      },
-      'Agosto 2025': {
-        year: 2025,
-        month: 7
-      },
-      'Setembro 2025': {
-        year: 2025,
-        month: 8
-      },
-      'Outubro 2025': {
-        year: 2025,
-        month: 9
-      },
-      'Novembro 2025': {
-        year: 2025,
-        month: 10
-      },
-      'Dezembro 2025': {
-        year: 2025,
-        month: 11
-      }
-    }[selectedMonth];
+    const { year, month } = parseMonth(selectedMonth);
     const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    // Verificar marcos acadêmicos
     const marcosDoDay = marcos.filter(marco => targetDate >= marco.data_inicio && targetDate <= (marco.data_fim || marco.data_inicio));
 
-    // Verificar comunicações existentes para a pessoa específica
     const comunicacoesDoDay = supabaseData.comunicacoes.filter(comm => 
       comm.data_inicio === targetDate && 
       comm.ativo && 
       (pessoa === 'Todos' || comm.pessoa?.nome === pessoa)
     );
 
-    // NOVA LÓGICA DE CONFLITO:
-    // Só mostrar ! se houver comunicações no mesmo dia que compartilhem:
-    // - Mesmo período (safra)
-    // - Mesma instituição
-    // - Mesma persona
     let temConflito = false;
     
     if (comunicacoesDoDay.length > 1) {
-      // Verificar se há sobreposição de período + instituição + persona
       for (let i = 0; i < comunicacoesDoDay.length; i++) {
         for (let j = i + 1; j < comunicacoesDoDay.length; j++) {
           const comm1 = comunicacoesDoDay[i];
           const comm2 = comunicacoesDoDay[j];
           
-          // Verificar se há safras em comum
           const safrasComum = (comm1.safras || []).some(s1 => 
             (comm2.safras || []).includes(s1)
           );
-          
-          // Verificar se é a mesma instituição
           const mesmaInstituicao = comm1.instituicao_id === comm2.instituicao_id;
-          
-          // Verificar se há personas em comum
           const personasComum = (comm1.personas || []).some(p1 => 
             (comm2.personas || []).some(p2 => p1?.id === p2?.id)
           );
@@ -207,99 +145,31 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     };
   };
 
-  // Função para verificar se é fim de semana
   const isWeekend = (day: number) => {
-    const {
-      year,
-      month
-    } = {
-      'Julho 2025': {
-        year: 2025,
-        month: 6
-      },
-      'Agosto 2025': {
-        year: 2025,
-        month: 7
-      },
-      'Setembro 2025': {
-        year: 2025,
-        month: 8
-      },
-      'Outubro 2025': {
-        year: 2025,
-        month: 9
-      },
-      'Novembro 2025': {
-        year: 2025,
-        month: 10
-      },
-      'Dezembro 2025': {
-        year: 2025,
-        month: 11
-      }
-    }[selectedMonth];
+    const { year, month } = parseMonth(selectedMonth);
     const date = new Date(year, month, day);
     const dayOfWeek = date.getDay();
     return dayOfWeek === 0 || dayOfWeek === 6;
   };
+
   const days = generateTimelineDays();
   const filteredPessoas = filters.pessoa === 'Todos' ? supabaseData.pessoas.map(p => p.nome) : [filters.pessoa];
 
-  // Função para obter marcos que se estendem por múltiplos dias
   const getMarcoSpan = (marco: Marco, day: number) => {
-    const {
-      year,
-      month
-    } = {
-      'Julho 2025': {
-        year: 2025,
-        month: 6
-      },
-      'Agosto 2025': {
-        year: 2025,
-        month: 7
-      },
-      'Setembro 2025': {
-        year: 2025,
-        month: 8
-      },
-      'Outubro 2025': {
-        year: 2025,
-        month: 9
-      },
-      'Novembro 2025': {
-        year: 2025,
-        month: 10
-      },
-      'Dezembro 2025': {
-        year: 2025,
-        month: 11
-      }
-    }[selectedMonth];
+    const { year, month } = parseMonth(selectedMonth);
     const startDate = new Date(marco.data_inicio);
     const endDate = new Date(marco.data_fim || marco.data_inicio);
     const currentDate = new Date(year, month, day);
     if (currentDate >= startDate && currentDate <= endDate) {
-      // Calcular quantos dias o marco se estende a partir deste dia
       const remainingDays = Math.min(Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1, days.length - day + 1);
       return remainingDays > 1 ? remainingDays : 1;
     }
     return 0;
   };
 
-  // Span de Régua Aberta (barra contínua como marco)
   const getReguaSpan = (com: ComunicacaoDetalhada, day: number) => {
-    const { year, month } = {
-      'Julho 2025': { year: 2025, month: 6 },
-      'Agosto 2025': { year: 2025, month: 7 },
-      'Setembro 2025': { year: 2025, month: 8 },
-      'Outubro 2025': { year: 2025, month: 9 },
-      'Novembro 2025': { year: 2025, month: 10 },
-      'Dezembro 2025': { year: 2025, month: 11 }
-    }[selectedMonth];
-
+    const { year, month } = parseMonth(selectedMonth);
     const startDate = new Date(com.data_inicio);
-    // Para Régua Aberta sem data_fim, considerar até o fim do mês corrente
     const monthEnd = new Date(year, month + 1, 0);
     const endDate = new Date(com.data_fim || monthEnd.toISOString().slice(0,10));
     const currentDate = new Date(year, month, day);
@@ -315,15 +185,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   };
 
   const isFirstVisibleDayRegua = (com: ComunicacaoDetalhada, day: number) => {
-    const { year, month } = {
-      'Julho 2025': { year: 2025, month: 6 },
-      'Agosto 2025': { year: 2025, month: 7 },
-      'Setembro 2025': { year: 2025, month: 8 },
-      'Outubro 2025': { year: 2025, month: 9 },
-      'Novembro 2025': { year: 2025, month: 10 },
-      'Dezembro 2025': { year: 2025, month: 11 }
-    }[selectedMonth];
-
+    const { year, month } = parseMonth(selectedMonth);
     const currentDateObj = new Date(year, month, day);
     const prevDateObj = new Date(year, month, day - 1);
     const startDate = new Date(com.data_inicio);
@@ -465,16 +327,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         const span = getMarcoSpan(marco, day);
                         if (span <= 0) return null;
                         
-                        // Só renderizar o marco no primeiro dia
-                        const {year, month} = {
-                          'Julho 2025': { year: 2025, month: 6 },
-                          'Agosto 2025': { year: 2025, month: 7 },
-                          'Setembro 2025': { year: 2025, month: 8 },
-                          'Outubro 2025': { year: 2025, month: 9 },
-                          'Novembro 2025': { year: 2025, month: 10 },
-                          'Dezembro 2025': { year: 2025, month: 11 }
-                        }[selectedMonth];
-                        const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const { year, month } = parseMonth(selectedMonth);
                         const currentDateObj = new Date(year, month, day);
                         const prevDateObj = new Date(year, month, day - 1);
                         const startDate = new Date(marco.data_inicio);
@@ -567,7 +420,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                       })}
 
                                     <div className="flex flex-col gap-1 pt-3">
-                                      {/* Pontual e Régua Fechada: quadrados abaixo */}
                                       {conflictInfo.comunicacoes
                                         .filter(c => c.tipo_disparo !== 'Régua Aberta')
                                         .map((comunicacao) => (
@@ -672,15 +524,12 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               {(() => {
-                const availableDays = [];
-                const today = new Date();
-                const currentMonth = today.getMonth();
-                const currentYear = today.getFullYear();
-                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const availableDays: number[] = [];
+                const { year, month } = parseMonth(selectedMonth);
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
                 
-                // Começar do dia atual e ir até o final do mês
-                for (let day = today.getDate(); day <= daysInMonth; day++) {
-                  const currentDate = new Date(currentYear, currentMonth, day);
+                for (let day = 1; day <= daysInMonth; day++) {
+                  const currentDate = new Date(year, month, day);
                   const dayOfWeek = currentDate.getDay();
                   const isWeekendDay = dayOfWeek === 0 || dayOfWeek === 6;
                   

@@ -2,16 +2,37 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+type Modalidade = 'Presencial' | 'EAD' | 'Híbrido';
+type Maturidade = 'Calouros' | 'Veteranos' | 'Ambos';
+
 export interface Marco {
   id: string;
   nome: string;
   data_inicio: string;
   data_fim: string;
   safra: string;
-  modalidade: 'Presencial' | 'EAD' | 'Híbrido';
-  maturidade: 'Calouros' | 'Veteranos' | 'Ambos';
+  modalidade: Modalidade;
+  maturidade: Maturidade;
   cor: string;
 }
+
+const MODALIDADES: Modalidade[] = ['Presencial', 'EAD', 'Híbrido'];
+const MATURIDADES: Maturidade[] = ['Calouros', 'Veteranos', 'Ambos'];
+
+const normalizeMarco = (value: any): Marco => ({
+  id: value.id,
+  nome: value.nome,
+  data_inicio: value.data_inicio,
+  data_fim: value.data_fim,
+  safra: value.safra,
+  modalidade: MODALIDADES.includes(value.modalidade as Modalidade)
+    ? (value.modalidade as Modalidade)
+    : 'Presencial',
+  maturidade: MATURIDADES.includes(value.maturidade as Maturidade)
+    ? (value.maturidade as Maturidade)
+    : 'Ambos',
+  cor: value.cor,
+});
 
 export function useMarcos() {
   const [marcos, setMarcos] = useState<Marco[]>([]);
@@ -26,7 +47,7 @@ export function useMarcos() {
 
       if (error) throw error;
 
-      setMarcos(data || []);
+      setMarcos((data || []).map(normalizeMarco));
     } catch (error) {
       console.error('Erro ao buscar marcos:', error);
       toast({
@@ -49,12 +70,13 @@ export function useMarcos() {
 
       if (error) throw error;
 
-      setMarcos(prev => [...prev, data]);
+      const marcoNormalizado = normalizeMarco(data);
+      setMarcos(prev => [...prev, marcoNormalizado]);
       toast({
         title: "Sucesso",
         description: "Marco acadêmico adicionado com sucesso",
       });
-      return data;
+      return marcoNormalizado;
     } catch (error) {
       console.error('Erro ao adicionar marco:', error);
       toast({

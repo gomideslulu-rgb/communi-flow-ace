@@ -14,7 +14,310 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      canais: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      categorias: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      comunicacao_canais: {
+        Row: {
+          canal_id: string
+          comunicacao_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          canal_id: string
+          comunicacao_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          canal_id?: string
+          comunicacao_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacao_canais_canal_id_fkey"
+            columns: ["canal_id"]
+            isOneToOne: false
+            referencedRelation: "canais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_canais_comunicacao_id_fkey"
+            columns: ["comunicacao_id"]
+            isOneToOne: false
+            referencedRelation: "comunicacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicacao_personas: {
+        Row: {
+          comunicacao_id: string
+          created_at: string
+          id: string
+          persona_id: string
+        }
+        Insert: {
+          comunicacao_id: string
+          created_at?: string
+          id?: string
+          persona_id: string
+        }
+        Update: {
+          comunicacao_id?: string
+          created_at?: string
+          id?: string
+          persona_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacao_personas_comunicacao_id_fkey"
+            columns: ["comunicacao_id"]
+            isOneToOne: false
+            referencedRelation: "comunicacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_personas_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicacoes: {
+        Row: {
+          ativo: boolean
+          categoria_id: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          id: string
+          instituicao_id: string
+          nome_acao: string
+          pessoa_id: string
+          repiques: string[]
+          safras: string[]
+          tipo_disparo: Database["public"]["Enums"]["tipo_disparo_enum"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria_id: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          id?: string
+          instituicao_id: string
+          nome_acao: string
+          pessoa_id: string
+          repiques?: string[]
+          safras?: string[]
+          tipo_disparo: Database["public"]["Enums"]["tipo_disparo_enum"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria_id?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          instituicao_id?: string
+          nome_acao?: string
+          pessoa_id?: string
+          repiques?: string[]
+          safras?: string[]
+          tipo_disparo?: Database["public"]["Enums"]["tipo_disparo_enum"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacoes_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacoes_instituicao_id_fkey"
+            columns: ["instituicao_id"]
+            isOneToOne: false
+            referencedRelation: "instituicoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacoes_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instituicoes: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marcos: {
+        Row: {
+          cor: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          maturidade: Database["public"]["Enums"]["maturidade_enum"]
+          modalidade: Database["public"]["Enums"]["modalidade_enum"]
+          nome: string
+          safra: string
+          updated_at: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          maturidade: Database["public"]["Enums"]["maturidade_enum"]
+          modalidade: Database["public"]["Enums"]["modalidade_enum"]
+          nome: string
+          safra: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          maturidade?: Database["public"]["Enums"]["maturidade_enum"]
+          modalidade?: Database["public"]["Enums"]["modalidade_enum"]
+          nome?: string
+          safra?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      personas: {
+        Row: {
+          categoria: Database["public"]["Enums"]["persona_categoria_enum"]
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["persona_categoria_enum"]
+          cor: string
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["persona_categoria_enum"]
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pessoas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +326,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      maturidade_enum: "Calouros" | "Veteranos" | "Ambos"
+      modalidade_enum: "Presencial" | "EAD" | "Híbrido"
+      persona_categoria_enum: "disponivel" | "restrita"
+      tipo_disparo_enum: "Pontual" | "Régua Fechada" | "Régua Aberta"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +456,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      maturidade_enum: ["Calouros", "Veteranos", "Ambos"],
+      modalidade_enum: ["Presencial", "EAD", "Híbrido"],
+      persona_categoria_enum: ["disponivel", "restrita"],
+      tipo_disparo_enum: ["Pontual", "Régua Fechada", "Régua Aberta"],
+    },
   },
 } as const

@@ -53,6 +53,18 @@ export function CommunicationForm({
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [newPersonName, setNewPersonName] = useState('');
   const [showPersonManagement, setShowPersonManagement] = useState(false);
+  const [newCategoria, setNewCategoria] = useState('');
+  const [newCategoriaCor, setNewCategoriaCor] = useState('#3b82f6');
+  const [showCategoriaForm, setShowCategoriaForm] = useState(false);
+  const [newInstituicao, setNewInstituicao] = useState('');
+  const [newInstituicaoCor, setNewInstituicaoCor] = useState('#1e40af');
+  const [showInstituicaoForm, setShowInstituicaoForm] = useState(false);
+  const [newPersona, setNewPersona] = useState('');
+  const [newPersonaCor, setNewPersonaCor] = useState('#22c55e');
+  const [newPersonaCategoria, setNewPersonaCategoria] = useState<'disponivel' | 'restrita'>('disponivel');
+  const [showPersonaForm, setShowPersonaForm] = useState(false);
+  const [newCanal, setNewCanal] = useState('');
+  const [showCanalForm, setShowCanalForm] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length || !formData.safras?.length) {
@@ -216,6 +228,62 @@ export function CommunicationForm({
       // Error already handled in hook
     }
   };
+
+  const addCategoria = async () => {
+    if (newCategoria.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('categorias').insert([{ nome: newCategoria.trim(), cor: newCategoriaCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCategoria('');
+        setShowCategoriaForm(false);
+        toast({ title: "Sucesso", description: "Categoria adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addInstituicao = async () => {
+    if (newInstituicao.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('instituicoes').insert([{ nome: newInstituicao.trim(), cor: newInstituicaoCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewInstituicao('');
+        setShowInstituicaoForm(false);
+        toast({ title: "Sucesso", description: "Instituição adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addPersona = async () => {
+    if (newPersona.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('personas').insert([{ nome: newPersona.trim(), cor: newPersonaCor, categoria: newPersonaCategoria }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewPersona('');
+        setShowPersonaForm(false);
+        toast({ title: "Sucesso", description: "Persona adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addCanal = async () => {
+    if (newCanal.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('canais').insert([{ nome: newCanal.trim() }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCanal('');
+        setShowCanalForm(false);
+        toast({ title: "Sucesso", description: "Canal adicionado" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
   if (supabaseData.loading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }
@@ -277,36 +345,56 @@ export function CommunicationForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria *</Label>
-                  <Select value={formData.categoria_id} onValueChange={value => setFormData({
-                  ...formData,
-                  categoria_id: value
-                })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
-                          {categoria.nome}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={formData.categoria_id} onValueChange={value => setFormData({
+                    ...formData,
+                    categoria_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCategoriaForm(!showCategoriaForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showCategoriaForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Nova categoria" className="flex-1" />
+                    <Input type="color" value={newCategoriaCor} onChange={e => setNewCategoriaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addCategoria} size="sm">Adicionar</Button>
+                  </div>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="instituicao">Instituição *</Label>
-                  <Select value={formData.instituicao_id} onValueChange={value => setFormData({
-                  ...formData,
-                  instituicao_id: value
-                })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar instituição" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supabaseData.instituicoes.map(instituicao => <SelectItem key={instituicao.id} value={instituicao.id}>
-                          {instituicao.nome}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={formData.instituicao_id} onValueChange={value => setFormData({
+                    ...formData,
+                    instituicao_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar instituição" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.instituicoes.map(instituicao => <SelectItem key={instituicao.id} value={instituicao.id}>
+                            {instituicao.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowInstituicaoForm(!showInstituicaoForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showInstituicaoForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newInstituicao} onChange={e => setNewInstituicao(e.target.value)} placeholder="Nova instituição" className="flex-1" />
+                    <Input type="color" value={newInstituicaoCor} onChange={e => setNewInstituicaoCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addInstituicao} size="sm">Adicionar</Button>
+                  </div>}
                 </div>
               </div>
 
@@ -314,10 +402,27 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Persona *</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={handleSelectAllPersonas}>
-                      Selecionar Todos
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setShowPersonaForm(!showPersonaForm)}>
+                        <Plus className="h-4 w-4 mr-1" /> Nova
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={handleSelectAllPersonas}>
+                        Selecionar Todos
+                      </Button>
+                    </div>
                   </div>
+                  {showPersonaForm && <div className="flex gap-2 p-3 border rounded flex-wrap">
+                    <Input value={newPersona} onChange={e => setNewPersona(e.target.value)} placeholder="Nova persona" className="flex-1 min-w-[120px]" />
+                    <Input type="color" value={newPersonaCor} onChange={e => setNewPersonaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Select value={newPersonaCategoria} onValueChange={v => setNewPersonaCategoria(v as any)}>
+                      <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="disponivel">Disponível</SelectItem>
+                        <SelectItem value="restrita">Restrita</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" onClick={addPersona} size="sm">Adicionar</Button>
+                  </div>}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {supabaseData.personas.map(persona => <div key={persona.id} className="flex items-center space-x-2">
                         <Checkbox id={persona.id} checked={formData.persona_ids.includes(persona.id)} onCheckedChange={checked => handlePersonaChange(persona.id, !!checked)} />
@@ -334,7 +439,7 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <Label>Período*</Label>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                    {['25.2', '25.3', '25.4', '26.1', '26.2', '26.3'].map(safra => <div key={safra} className="flex items-center space-x-2">
+                    {['26.1', '26.2', '26.3', '26.4'].map(safra => <div key={safra} className="flex items-center space-x-2">
                         <Checkbox id={safra} checked={formData.safras.includes(safra)} onCheckedChange={checked => handleSafraChange(safra, !!checked)} />
                         <Label htmlFor={safra}>{safra}</Label>
                       </div>)}
@@ -395,7 +500,16 @@ export function CommunicationForm({
                   </div>}
 
                 <div className="space-y-2">
-                  <Label>Canais de Comunicação</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Canais de Comunicação</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCanalForm(!showCanalForm)}>
+                      <Plus className="h-4 w-4 mr-1" /> Novo
+                    </Button>
+                  </div>
+                  {showCanalForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCanal} onChange={e => setNewCanal(e.target.value)} placeholder="Novo canal" className="flex-1" />
+                    <Button type="button" onClick={addCanal} size="sm">Adicionar</Button>
+                  </div>}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {supabaseData.canais.map(canal => <div key={canal.id} className="flex items-center space-x-2">
                         <Checkbox id={canal.id} checked={formData.canal_ids.includes(canal.id)} onCheckedChange={checked => handleChannelChange(canal.id, !!checked)} />

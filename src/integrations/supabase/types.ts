@@ -228,6 +228,81 @@ export type Database = {
         }
         Relationships: []
       }
+      journeys: {
+        Row: {
+          area: string | null
+          brand_tag: string | null
+          business_unit: string | null
+          category: string | null
+          channels: string | null
+          course_type: string | null
+          created_at: string
+          emergency: boolean | null
+          flow_data: Json | null
+          format: string | null
+          harvest: string | null
+          id: string
+          modality: string | null
+          name: string
+          other_filters: string | null
+          period: string | null
+          request: string | null
+          request_type: string | null
+          requester: string | null
+          size: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: string | null
+          brand_tag?: string | null
+          business_unit?: string | null
+          category?: string | null
+          channels?: string | null
+          course_type?: string | null
+          created_at?: string
+          emergency?: boolean | null
+          flow_data?: Json | null
+          format?: string | null
+          harvest?: string | null
+          id?: string
+          modality?: string | null
+          name: string
+          other_filters?: string | null
+          period?: string | null
+          request?: string | null
+          request_type?: string | null
+          requester?: string | null
+          size?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          area?: string | null
+          brand_tag?: string | null
+          business_unit?: string | null
+          category?: string | null
+          channels?: string | null
+          course_type?: string | null
+          created_at?: string
+          emergency?: boolean | null
+          flow_data?: Json | null
+          format?: string | null
+          harvest?: string | null
+          id?: string
+          modality?: string | null
+          name?: string
+          other_filters?: string | null
+          period?: string | null
+          request?: string | null
+          request_type?: string | null
+          requester?: string | null
+          size?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marcos: {
         Row: {
           cor: string

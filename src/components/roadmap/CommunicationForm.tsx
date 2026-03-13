@@ -500,7 +500,16 @@ export function CommunicationForm({
                   </div>}
 
                 <div className="space-y-2">
-                  <Label>Canais de Comunicação</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Canais de Comunicação</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCanalForm(!showCanalForm)}>
+                      <Plus className="h-4 w-4 mr-1" /> Novo
+                    </Button>
+                  </div>
+                  {showCanalForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCanal} onChange={e => setNewCanal(e.target.value)} placeholder="Novo canal" className="flex-1" />
+                    <Button type="button" onClick={addCanal} size="sm">Adicionar</Button>
+                  </div>}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {supabaseData.canais.map(canal => <div key={canal.id} className="flex items-center space-x-2">
                         <Checkbox id={canal.id} checked={formData.canal_ids.includes(canal.id)} onCheckedChange={checked => handleChannelChange(canal.id, !!checked)} />

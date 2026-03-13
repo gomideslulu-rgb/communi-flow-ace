@@ -345,36 +345,56 @@ export function CommunicationForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria *</Label>
-                  <Select value={formData.categoria_id} onValueChange={value => setFormData({
-                  ...formData,
-                  categoria_id: value
-                })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
-                          {categoria.nome}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={formData.categoria_id} onValueChange={value => setFormData({
+                    ...formData,
+                    categoria_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCategoriaForm(!showCategoriaForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showCategoriaForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Nova categoria" className="flex-1" />
+                    <Input type="color" value={newCategoriaCor} onChange={e => setNewCategoriaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addCategoria} size="sm">Adicionar</Button>
+                  </div>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="instituicao">Instituição *</Label>
-                  <Select value={formData.instituicao_id} onValueChange={value => setFormData({
-                  ...formData,
-                  instituicao_id: value
-                })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar instituição" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supabaseData.instituicoes.map(instituicao => <SelectItem key={instituicao.id} value={instituicao.id}>
-                          {instituicao.nome}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={formData.instituicao_id} onValueChange={value => setFormData({
+                    ...formData,
+                    instituicao_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar instituição" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.instituicoes.map(instituicao => <SelectItem key={instituicao.id} value={instituicao.id}>
+                            {instituicao.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowInstituicaoForm(!showInstituicaoForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showInstituicaoForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newInstituicao} onChange={e => setNewInstituicao(e.target.value)} placeholder="Nova instituição" className="flex-1" />
+                    <Input type="color" value={newInstituicaoCor} onChange={e => setNewInstituicaoCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addInstituicao} size="sm">Adicionar</Button>
+                  </div>}
                 </div>
               </div>
 

@@ -125,7 +125,8 @@ export function useComunicacoes() {
           data_fim: formData.data_fim || null,
           repiques: formData.repiques,
           ativo: formData.ativo,
-          safras: formData.safras
+          safras: formData.safras,
+          modalidades: formData.modalidades
         });
       }
 

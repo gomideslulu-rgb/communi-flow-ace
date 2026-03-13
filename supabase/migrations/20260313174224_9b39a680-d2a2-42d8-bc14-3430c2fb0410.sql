@@ -1,0 +1,1 @@
+ALTER TABLE public.comunicacoes ADD COLUMN modalidades text[] NOT NULL DEFAULT '{}'::text[];

@@ -140,6 +140,7 @@ export type Database = {
           data_inicio: string
           id: string
           instituicao_id: string
+          modalidades: string[]
           nome_acao: string
           pessoa_id: string
           repiques: string[]
@@ -156,6 +157,7 @@ export type Database = {
           data_inicio: string
           id?: string
           instituicao_id: string
+          modalidades?: string[]
           nome_acao: string
           pessoa_id: string
           repiques?: string[]
@@ -172,6 +174,7 @@ export type Database = {
           data_inicio?: string
           id?: string
           instituicao_id?: string
+          modalidades?: string[]
           nome_acao?: string
           pessoa_id?: string
           repiques?: string[]

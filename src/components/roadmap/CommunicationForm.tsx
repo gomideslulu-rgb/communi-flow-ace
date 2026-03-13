@@ -452,7 +452,7 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <Label>Modalidade</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {['Ao Vivo', 'Presencial', 'Ao Vivo e Semi'].map(mod => <div key={mod} className="flex items-center space-x-2">
+                    {['Ao Vivo', 'Presencial', 'Semi'].map(mod => <div key={mod} className="flex items-center space-x-2">
                         <Checkbox id={`mod-${mod}`} checked={formData.modalidades.includes(mod)} onCheckedChange={checked => {
                           const updated = checked ? [...formData.modalidades, mod] : formData.modalidades.filter(m => m !== mod);
                           setFormData({ ...formData, modalidades: updated });

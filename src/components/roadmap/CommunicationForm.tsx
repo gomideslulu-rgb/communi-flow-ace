@@ -402,10 +402,27 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Persona *</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={handleSelectAllPersonas}>
-                      Selecionar Todos
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setShowPersonaForm(!showPersonaForm)}>
+                        <Plus className="h-4 w-4 mr-1" /> Nova
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={handleSelectAllPersonas}>
+                        Selecionar Todos
+                      </Button>
+                    </div>
                   </div>
+                  {showPersonaForm && <div className="flex gap-2 p-3 border rounded flex-wrap">
+                    <Input value={newPersona} onChange={e => setNewPersona(e.target.value)} placeholder="Nova persona" className="flex-1 min-w-[120px]" />
+                    <Input type="color" value={newPersonaCor} onChange={e => setNewPersonaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Select value={newPersonaCategoria} onValueChange={v => setNewPersonaCategoria(v as any)}>
+                      <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="disponivel">Disponível</SelectItem>
+                        <SelectItem value="restrita">Restrita</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" onClick={addPersona} size="sm">Adicionar</Button>
+                  </div>}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {supabaseData.personas.map(persona => <div key={persona.id} className="flex items-center space-x-2">
                         <Checkbox id={persona.id} checked={formData.persona_ids.includes(persona.id)} onCheckedChange={checked => handlePersonaChange(persona.id, !!checked)} />

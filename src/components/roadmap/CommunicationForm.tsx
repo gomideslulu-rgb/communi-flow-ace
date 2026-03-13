@@ -53,6 +53,18 @@ export function CommunicationForm({
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
   const [newPersonName, setNewPersonName] = useState('');
   const [showPersonManagement, setShowPersonManagement] = useState(false);
+  const [newCategoria, setNewCategoria] = useState('');
+  const [newCategoriaCor, setNewCategoriaCor] = useState('#3b82f6');
+  const [showCategoriaForm, setShowCategoriaForm] = useState(false);
+  const [newInstituicao, setNewInstituicao] = useState('');
+  const [newInstituicaoCor, setNewInstituicaoCor] = useState('#1e40af');
+  const [showInstituicaoForm, setShowInstituicaoForm] = useState(false);
+  const [newPersona, setNewPersona] = useState('');
+  const [newPersonaCor, setNewPersonaCor] = useState('#22c55e');
+  const [newPersonaCategoria, setNewPersonaCategoria] = useState<'disponivel' | 'restrita'>('disponivel');
+  const [showPersonaForm, setShowPersonaForm] = useState(false);
+  const [newCanal, setNewCanal] = useState('');
+  const [showCanalForm, setShowCanalForm] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length || !formData.safras?.length) {

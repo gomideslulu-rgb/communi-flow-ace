@@ -39,7 +39,8 @@ export function useComunicacoes() {
           data_fim: formData.data_fim,
           repiques: formData.repiques,
           ativo: formData.ativo,
-          safras: formData.safras
+          safras: formData.safras,
+          modalidades: formData.modalidades
         });
 
         // Comunicações nos repiques (data início + X dias)

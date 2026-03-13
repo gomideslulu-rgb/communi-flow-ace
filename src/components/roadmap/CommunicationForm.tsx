@@ -47,7 +47,8 @@ export function CommunicationForm({
     canal_ids: [],
     repiques: [],
     ativo: true,
-    safras: []
+    safras: [],
+    modalidades: []
   });
   const [customRepique, setCustomRepique] = useState('');
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
@@ -99,7 +100,8 @@ export function CommunicationForm({
         canal_ids: [],
         repiques: [],
         ativo: true,
-        safras: []
+        safras: [],
+        modalidades: []
       });
     } catch (error) {
       // Error already handled in hook
@@ -124,7 +126,8 @@ export function CommunicationForm({
         canal_ids: [],
         repiques: [],
         ativo: true,
-        safras: []
+        safras: [],
+        modalidades: []
       });
     } catch (error) {
       // Error already handled in hook
@@ -442,6 +445,19 @@ export function CommunicationForm({
                     {['26.1', '26.2', '26.3', '26.4'].map(safra => <div key={safra} className="flex items-center space-x-2">
                         <Checkbox id={safra} checked={formData.safras.includes(safra)} onCheckedChange={checked => handleSafraChange(safra, !!checked)} />
                         <Label htmlFor={safra}>{safra}</Label>
+                      </div>)}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Modalidade</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['Ao Vivo', 'Presencial', 'Ao Vivo e Semi'].map(mod => <div key={mod} className="flex items-center space-x-2">
+                        <Checkbox id={`mod-${mod}`} checked={formData.modalidades.includes(mod)} onCheckedChange={checked => {
+                          const updated = checked ? [...formData.modalidades, mod] : formData.modalidades.filter(m => m !== mod);
+                          setFormData({ ...formData, modalidades: updated });
+                        }} />
+                        <Label htmlFor={`mod-${mod}`}>{mod}</Label>
                       </div>)}
                   </div>
                 </div>

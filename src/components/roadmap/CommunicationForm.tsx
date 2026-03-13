@@ -439,7 +439,7 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <Label>Período*</Label>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                    {['25.2', '25.3', '25.4', '26.1', '26.2', '26.3'].map(safra => <div key={safra} className="flex items-center space-x-2">
+                    {['26.1', '26.2', '26.3', '26.4'].map(safra => <div key={safra} className="flex items-center space-x-2">
                         <Checkbox id={safra} checked={formData.safras.includes(safra)} onCheckedChange={checked => handleSafraChange(safra, !!checked)} />
                         <Label htmlFor={safra}>{safra}</Label>
                       </div>)}

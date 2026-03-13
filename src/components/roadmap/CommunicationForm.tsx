@@ -228,6 +228,62 @@ export function CommunicationForm({
       // Error already handled in hook
     }
   };
+
+  const addCategoria = async () => {
+    if (newCategoria.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('categorias').insert([{ nome: newCategoria.trim(), cor: newCategoriaCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCategoria('');
+        setShowCategoriaForm(false);
+        toast({ title: "Sucesso", description: "Categoria adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addInstituicao = async () => {
+    if (newInstituicao.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('instituicoes').insert([{ nome: newInstituicao.trim(), cor: newInstituicaoCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewInstituicao('');
+        setShowInstituicaoForm(false);
+        toast({ title: "Sucesso", description: "Instituição adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addPersona = async () => {
+    if (newPersona.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('personas').insert([{ nome: newPersona.trim(), cor: newPersonaCor, categoria: newPersonaCategoria }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewPersona('');
+        setShowPersonaForm(false);
+        toast({ title: "Sucesso", description: "Persona adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
+  const addCanal = async () => {
+    if (newCanal.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('canais').insert([{ nome: newCanal.trim() }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCanal('');
+        setShowCanalForm(false);
+        toast({ title: "Sucesso", description: "Canal adicionado" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
   if (supabaseData.loading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }

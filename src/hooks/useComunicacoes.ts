@@ -14,6 +14,7 @@ export interface ComunicacaoForm {
   canal_ids: string[];
   ativo: boolean;
   safras: string[];
+  modalidades: string[];
 }
 
 export function useComunicacoes() {

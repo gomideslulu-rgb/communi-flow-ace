@@ -47,7 +47,8 @@ export function CommunicationForm({
     canal_ids: [],
     repiques: [],
     ativo: true,
-    safras: []
+    safras: [],
+    modalidades: []
   });
   const [customRepique, setCustomRepique] = useState('');
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false);

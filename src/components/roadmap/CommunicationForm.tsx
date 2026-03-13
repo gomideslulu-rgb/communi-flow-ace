@@ -100,7 +100,8 @@ export function CommunicationForm({
         canal_ids: [],
         repiques: [],
         ativo: true,
-        safras: []
+        safras: [],
+        modalidades: []
       });
     } catch (error) {
       // Error already handled in hook

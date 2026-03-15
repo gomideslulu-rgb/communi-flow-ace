@@ -381,143 +381,134 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                 </div>
 
                 {/* Pessoas */}
-                {filteredPessoas.map(pessoa => <div key={pessoa} className="grid grid-cols-[200px_1fr] gap-0">
-                    <div className="bg-red-50 p-2 font-medium border text-red-700">
-                      {pessoa}
+                {uniqueActions.map(nomeAcao => {
+                  const actionComunicacoes = filteredComunicacoes.filter(c => c.nome_acao === nomeAcao);
+                  return <div key={nomeAcao} className="grid grid-cols-[200px_1fr] gap-0">
+                    <div className="bg-red-50 p-2 font-medium border text-red-700 text-xs truncate" title={nomeAcao}>
+                      {nomeAcao}
                     </div>
                     <div className="grid gap-0" style={{
-                  gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`
-                }}>
+                      gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`
+                    }}>
                       {days.map(day => {
-                    const conflictInfo = checkConflicts(day, pessoa);
-                    const comunicacoes = conflictInfo.comunicacoes;
-                    const weekend = isWeekend(day);
-                    const hasMarcos = conflictInfo.marcos.length > 0;
-                    const available = !weekend && comunicacoes.length === 0;
-                    return <Tooltip key={day}>
-                            <TooltipTrigger asChild>
-                              <div className={`
-                                  border border-gray-200 min-h-[40px] p-1 cursor-pointer relative
-                                  ${weekend ? 'bg-gray-100' : ''}
-                                  ${available ? 'hover:bg-green-50' : ''}
-                                `}>
-                                 {/* Comunicações */}
-                                {conflictInfo.comunicacoes.length > 0 && (
-                                  <>
-                                    {conflictInfo.comunicacoes
-                                      .filter(c => c.tipo_disparo === 'Régua Aberta')
-                                      .map((comunicacao, idx) => {
-                                        const span = getReguaSpan(comunicacao, day);
-                                        if (span <= 0) return null;
-                                        if (!isFirstVisibleDayRegua(comunicacao, day)) return null;
-                                        const color = supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666';
-                                        return (
-                                          <div 
-                                            key={comunicacao.id} 
-                                            className="absolute left-0 h-2"
-                                            style={{
-                                              backgroundColor: color,
-                                              width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
-                                              top: `${2 + idx * 8}px`,
-                                              zIndex: 20,
-                                              pointerEvents: 'none'
-                                            }}
-                                          />
-                                        );
-                                      })}
+                        const { year, month } = parseMonth(selectedMonth);
+                        const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const weekend = isWeekend(day);
+                        
+                        const comunicacoesDoDay = actionComunicacoes.filter(comm => {
+                          if (comm.tipo_disparo === 'Régua Aberta' && comm.data_fim) {
+                            return targetDate >= comm.data_inicio && targetDate <= comm.data_fim;
+                          }
+                          return comm.data_inicio === targetDate;
+                        });
 
-                                    <div className="flex flex-col gap-1 pt-3">
-                                      {conflictInfo.comunicacoes
-                                        .filter(c => c.tipo_disparo !== 'Régua Aberta')
-                                        .map((comunicacao) => (
-                                          <div 
-                                            key={comunicacao.id} 
-                                            className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-                                            style={{
-                                              backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                            }}
-                                          >
-                                            {comunicacao.pessoa?.nome?.charAt(0) || '?'}
-                                          </div>
-                                        ))
-                                      }
-                                    </div>
-                                  </>
-                                )}
-                                {conflictInfo.comunicacoes.length > 1 && (
-                                  <div className="text-xs text-red-600 font-bold">
-                                    {conflictInfo.comunicacoes.length}x
-                                  </div>
-                                )}
+                        const available = !weekend && comunicacoesDoDay.length === 0;
+                        const conflictInfo = checkConflicts(day, 'Todos');
 
-                                {conflictInfo.temConflito && <AlertTriangle className="absolute top-1 right-1 h-3 w-3 text-red-500" />}
-
-                                {available && !hasMarcos && <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-xs">
-                              <div className="space-y-2">
-                                <div className="font-medium">
-                                  {pessoa} - Dia {day}
-                                </div>
-                                
-                                {weekend && <div className="text-sm text-gray-600">Fim de semana</div>}
-
-                                {conflictInfo.comunicacoes.length > 0 && <div>
-                                    <div className="font-medium text-green-600">
-                                      Comunicaç{conflictInfo.comunicacoes.length > 1 ? 'ões' : 'ão'}:
-                                    </div>
-                                    {conflictInfo.comunicacoes.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1 border-b border-gray-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                                         <div className="flex items-start justify-between gap-2">
-                                           <div className="flex-1">
-                                             <div>• <strong>{comunicacao.nome_acao}</strong></div>
-                                             <div className="text-xs text-gray-600 ml-2">
-                                               Persona: {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}<br />
-                                               Categoria: {comunicacao.categoria?.nome}<br />
-                                               Instituição: {comunicacao.instituicao?.nome}<br />
-                                               Tipo: {comunicacao.tipo_disparo}
-                                               {(comunicacao.canais || []).length > 0 && <><br />Canais: {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}</>}
-                                             </div>
-                                           </div>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleDeleteComunicacao(comunicacao.id);
-                                            }}
-                                          >
-                                            <X className="h-3 w-3" />
-                                          </Button>
+                        return <Tooltip key={day}>
+                          <TooltipTrigger asChild>
+                            <div className={`
+                              border border-gray-200 min-h-[40px] p-1 cursor-pointer relative
+                              ${weekend ? 'bg-gray-100' : ''}
+                              ${available ? 'hover:bg-green-50' : ''}
+                            `}>
+                              {comunicacoesDoDay.length > 0 && (
+                                <>
+                                  {comunicacoesDoDay
+                                    .filter(c => c.tipo_disparo === 'Régua Aberta')
+                                    .map((comunicacao, idx) => {
+                                      const span = getReguaSpan(comunicacao, day);
+                                      if (span <= 0) return null;
+                                      if (!isFirstVisibleDayRegua(comunicacao, day)) return null;
+                                      const color = supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666';
+                                      return (
+                                        <div
+                                          key={comunicacao.id}
+                                          className="absolute left-0 h-2"
+                                          style={{
+                                            backgroundColor: color,
+                                            width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
+                                            top: `${2 + idx * 8}px`,
+                                            zIndex: 20,
+                                            pointerEvents: 'none'
+                                          }}
+                                        />
+                                      );
+                                    })}
+                                  <div className="flex flex-col gap-1 pt-3">
+                                    {comunicacoesDoDay
+                                      .filter(c => c.tipo_disparo !== 'Régua Aberta')
+                                      .map((comunicacao) => (
+                                        <div
+                                          key={comunicacao.id}
+                                          className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
+                                          style={{
+                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
+                                          }}
+                                        >
+                                          {comunicacao.nome_acao?.charAt(0) || '?'}
                                         </div>
-                                      </div>)}
-                                    {conflictInfo.comunicacoes.length > 1 && <div className="text-xs text-orange-600 mt-1">
-                                        ⚠️ Múltiplas comunicações no mesmo dia
-                                      </div>}
-                                  </div>}
-
-                                {conflictInfo.marcos.length > 0 && <div>
-                                    <div className="font-medium text-blue-600">Marcos Acadêmicos:</div>
-                                    {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-sm">
-                                        • {marco.nome} ({marco.modalidade} - {marco.maturidade})
-                                      </div>)}
-                                  </div>}
-
-                                {conflictInfo.recomendacao && <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
-                                    <Info className="inline h-3 w-3 mr-1" />
-                                    {conflictInfo.recomendacao}
-                                  </div>}
-
-                                {available && !hasMarcos && <div className="text-sm text-green-600">
-                                    ✓ Dia disponível para comunicação
-                                  </div>}
+                                      ))
+                                    }
+                                  </div>
+                                </>
+                              )}
+                              {available && !weekend && <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="space-y-2">
+                              <div className="font-medium">
+                                {nomeAcao} - Dia {day}
                               </div>
-                            </TooltipContent>
-                          </Tooltip>;
-                  })}
+                              {weekend && <div className="text-sm text-gray-600">Fim de semana</div>}
+                              {comunicacoesDoDay.length > 0 && <div>
+                                <div className="font-medium text-green-600">
+                                  Comunicaç{comunicacoesDoDay.length > 1 ? 'ões' : 'ão'}:
+                                </div>
+                                {comunicacoesDoDay.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1 border-b border-gray-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1">
+                                      <div>• <strong>{comunicacao.nome_acao}</strong></div>
+                                      <div className="text-xs text-gray-600 ml-2">
+                                        Responsável: {comunicacao.pessoa?.nome || 'N/A'}<br />
+                                        Persona: {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}<br />
+                                        Categoria: {comunicacao.categoria?.nome}<br />
+                                        Instituição: {comunicacao.instituicao?.nome}<br />
+                                        Tipo: {comunicacao.tipo_disparo}
+                                        {(comunicacao.canais || []).length > 0 && <><br />Canais: {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}</>}
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteComunicacao(comunicacao.id);
+                                      }}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>)}
+                              </div>}
+                              {conflictInfo.marcos.length > 0 && <div>
+                                <div className="font-medium text-blue-600">Marcos Acadêmicos:</div>
+                                {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-sm">
+                                  • {marco.nome} ({marco.modalidade} - {marco.maturidade})
+                                </div>)}
+                              </div>}
+                              {available && !weekend && <div className="text-sm text-green-600">
+                                ✓ Dia disponível para comunicação
+                              </div>}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>;
+                      })}
                     </div>
-                  </div>)}
+                  </div>;
+                })}
               </div>
             </div>
           </CardContent>

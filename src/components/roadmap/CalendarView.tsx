@@ -380,12 +380,17 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   </div>
                 </div>
 
-                {/* Pessoas */}
-                {uniqueActions.map(nomeAcao => {
+                {/* Ações */}
+                <div className="space-y-1 mt-2">
+                {uniqueActions.map((nomeAcao, actionIndex) => {
                   const actionComunicacoes = filteredComunicacoes.filter(c => c.nome_acao === nomeAcao);
-                  return <div key={nomeAcao} className="grid grid-cols-[200px_1fr] gap-0">
-                    <div className="bg-red-50 p-2 font-medium border text-red-700 text-xs truncate" title={nomeAcao}>
-                      {nomeAcao}
+                  const categoriaColor = actionComunicacoes[0]?.categoria?.cor || '#6b7280';
+                  
+                  return <div key={nomeAcao} className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden" style={{ borderLeft: `3px solid ${categoriaColor}` }}>
+                    <div className="bg-muted/50 p-2 font-medium border border-l-0 flex items-center gap-2 min-h-[44px]">
+                      <span className="text-xs text-foreground truncate" title={nomeAcao}>
+                        {nomeAcao}
+                      </span>
                     </div>
                     <div className="grid gap-0" style={{
                       gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`
@@ -395,6 +400,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                         const weekend = isWeekend(day);
                         
+                        // Buscar comunicações desta ação neste dia
                         const comunicacoesDoDay = actionComunicacoes.filter(comm => {
                           if (comm.tipo_disparo === 'Régua Aberta' && comm.data_fim) {
                             return targetDate >= comm.data_inicio && targetDate <= comm.data_fim;
@@ -402,87 +408,99 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           return comm.data_inicio === targetDate;
                         });
 
-                        const available = !weekend && comunicacoesDoDay.length === 0;
+                        // Pegar apenas uma comunicação representativa por dia (evitar duplicatas visuais)
+                        const comunicacaoRepresentativa = comunicacoesDoDay.length > 0 ? comunicacoesDoDay[0] : null;
+                        const hasActivity = comunicacoesDoDay.length > 0;
                         const conflictInfo = checkConflicts(day, 'Todos');
+                        const personaColor = comunicacaoRepresentativa 
+                          ? supabaseData.personas.find(p => (comunicacaoRepresentativa.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#6b7280'
+                          : undefined;
+
+                        // Régua aberta: verificar se é uma barra contínua
+                        const reguaAberta = comunicacoesDoDay.find(c => c.tipo_disparo === 'Régua Aberta');
+                        const isRegua = !!reguaAberta;
 
                         return <Tooltip key={day}>
                           <TooltipTrigger asChild>
                             <div className={`
-                              border border-gray-200 min-h-[40px] p-1 cursor-pointer relative
-                              ${weekend ? 'bg-gray-100' : ''}
-                              ${available ? 'hover:bg-green-50' : ''}
+                              border-r border-b border-border/40 min-h-[44px] cursor-pointer relative flex items-center justify-center
+                              ${weekend ? 'bg-muted/30' : 'bg-background'}
+                              ${hasActivity ? 'hover:opacity-80' : 'hover:bg-accent/20'}
+                              transition-colors duration-150
                             `}>
-                              {comunicacoesDoDay.length > 0 && (
-                                <>
-                                  {comunicacoesDoDay
-                                    .filter(c => c.tipo_disparo === 'Régua Aberta')
-                                    .map((comunicacao, idx) => {
-                                      const span = getReguaSpan(comunicacao, day);
-                                      if (span <= 0) return null;
-                                      if (!isFirstVisibleDayRegua(comunicacao, day)) return null;
-                                      const color = supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666';
-                                      return (
-                                        <div
-                                          key={comunicacao.id}
-                                          className="absolute left-0 h-2"
-                                          style={{
-                                            backgroundColor: color,
-                                            width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 4}px)` : '100%',
-                                            top: `${2 + idx * 8}px`,
-                                            zIndex: 20,
-                                            pointerEvents: 'none'
-                                          }}
-                                        />
-                                      );
-                                    })}
-                                  <div className="flex flex-col gap-1 pt-3">
-                                    {comunicacoesDoDay
-                                      .filter(c => c.tipo_disparo !== 'Régua Aberta')
-                                      .map((comunicacao) => (
-                                        <div
-                                          key={comunicacao.id}
-                                          className="w-6 h-6 rounded text-white text-xs flex items-center justify-center font-bold"
-                                          style={{
-                                            backgroundColor: supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#666'
-                                          }}
-                                        >
-                                          {comunicacao.nome_acao?.charAt(0) || '?'}
-                                        </div>
-                                      ))
-                                    }
-                                  </div>
-                                </>
+                              {isRegua && reguaAberta && (() => {
+                                const span = getReguaSpan(reguaAberta, day);
+                                if (span <= 0) return null;
+                                if (!isFirstVisibleDayRegua(reguaAberta, day)) {
+                                  // Continuação da barra - mostrar faixa fina
+                                  return <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full h-2 rounded-none" style={{ backgroundColor: personaColor, opacity: 0.6 }} />
+                                  </div>;
+                                }
+                                // Início da barra
+                                return <div
+                                  className="absolute left-0 h-2 rounded-r"
+                                  style={{
+                                    backgroundColor: personaColor,
+                                    width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 0}px)` : '100%',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    zIndex: 20,
+                                    pointerEvents: 'none'
+                                  }}
+                                />;
+                              })()}
+
+                              {hasActivity && !isRegua && (
+                                <div
+                                  className="w-7 h-7 rounded-md text-white text-[10px] flex items-center justify-center font-semibold shadow-sm"
+                                  style={{ backgroundColor: personaColor }}
+                                  title={comunicacaoRepresentativa?.tipo_disparo}
+                                >
+                                  {comunicacoesDoDay.length > 1 ? `${comunicacoesDoDay.length}` : comunicacaoRepresentativa?.tipo_disparo?.charAt(0) || '•'}
+                                </div>
                               )}
-                              {available && !weekend && <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full" />}
+
+                              {conflictInfo.temConflito && hasActivity && (
+                                <AlertTriangle className="absolute top-0.5 right-0.5 h-3 w-3 text-destructive" />
+                              )}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-xs">
                             <div className="space-y-2">
-                              <div className="font-medium">
-                                {nomeAcao} - Dia {day}
+                              <div className="font-medium text-sm">
+                                {nomeAcao} — Dia {day}
                               </div>
-                              {weekend && <div className="text-sm text-gray-600">Fim de semana</div>}
-                              {comunicacoesDoDay.length > 0 && <div>
-                                <div className="font-medium text-green-600">
-                                  Comunicaç{comunicacoesDoDay.length > 1 ? 'ões' : 'ão'}:
-                                </div>
-                                {comunicacoesDoDay.map(comunicacao => <div key={comunicacao.id} className="text-sm space-y-1 border-b border-gray-100 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
+                              {weekend && <div className="text-xs text-muted-foreground">Fim de semana</div>}
+                              {comunicacoesDoDay.length > 0 && <div className="space-y-1.5">
+                                {comunicacoesDoDay.map(comunicacao => <div key={comunicacao.id} className="text-xs space-y-0.5 border-b border-border/50 pb-1.5 last:border-b-0 last:pb-0">
                                   <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1">
-                                      <div>• <strong>{comunicacao.nome_acao}</strong></div>
-                                      <div className="text-xs text-gray-600 ml-2">
-                                        Responsável: {comunicacao.pessoa?.nome || 'N/A'}<br />
-                                        Persona: {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}<br />
-                                        Categoria: {comunicacao.categoria?.nome}<br />
-                                        Instituição: {comunicacao.instituicao?.nome}<br />
-                                        Tipo: {comunicacao.tipo_disparo}
-                                        {(comunicacao.canais || []).length > 0 && <><br />Canais: {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}</>}
+                                    <div className="flex-1 space-y-0.5">
+                                      <div className="text-muted-foreground">
+                                        <strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}
                                       </div>
+                                      <div className="text-muted-foreground">
+                                        <strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}
+                                      </div>
+                                      <div className="text-muted-foreground">
+                                        <strong>Categoria:</strong> {comunicacao.categoria?.nome}
+                                      </div>
+                                      <div className="text-muted-foreground">
+                                        <strong>Instituição:</strong> {comunicacao.instituicao?.nome}
+                                      </div>
+                                      <div className="text-muted-foreground">
+                                        <strong>Tipo:</strong> {comunicacao.tipo_disparo}
+                                      </div>
+                                      {(comunicacao.canais || []).length > 0 && (
+                                        <div className="text-muted-foreground">
+                                          <strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      className="h-5 w-5 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 shrink-0"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteComunicacao(comunicacao.id);
@@ -494,13 +512,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 </div>)}
                               </div>}
                               {conflictInfo.marcos.length > 0 && <div>
-                                <div className="font-medium text-blue-600">Marcos Acadêmicos:</div>
-                                {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-sm">
+                                <div className="font-medium text-xs text-blue-600">Marcos Acadêmicos:</div>
+                                {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-xs text-muted-foreground">
                                   • {marco.nome} ({marco.modalidade} - {marco.maturidade})
                                 </div>)}
-                              </div>}
-                              {available && !weekend && <div className="text-sm text-green-600">
-                                ✓ Dia disponível para comunicação
                               </div>}
                             </div>
                           </TooltipContent>
@@ -509,6 +524,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                     </div>
                   </div>;
                 })}
+                </div>
               </div>
             </div>
           </CardContent>

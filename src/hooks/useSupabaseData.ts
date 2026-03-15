@@ -211,6 +211,83 @@ export function useSupabaseData() {
     }
   };
 
+  const updateComunicacao = async (id: string, data: {
+    pessoa_id: string;
+    nome_acao: string;
+    categoria_id: string;
+    instituicao_id: string;
+    tipo_disparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
+    data_inicio: string;
+    data_fim?: string | null;
+    repiques: string[];
+    ativo: boolean;
+    safras: string[];
+    modalidades: string[];
+    persona_ids: string[];
+    canal_ids: string[];
+  }) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('comunicacoes')
+        .update({
+          pessoa_id: data.pessoa_id,
+          nome_acao: data.nome_acao,
+          categoria_id: data.categoria_id,
+          instituicao_id: data.instituicao_id,
+          tipo_disparo: data.tipo_disparo,
+          data_inicio: data.data_inicio,
+          data_fim: data.data_fim || null,
+          repiques: data.repiques,
+          ativo: data.ativo,
+          safras: data.safras,
+          modalidades: data.modalidades,
+        })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Update persona relationships
+      await supabase.from('comunicacao_personas').delete().eq('comunicacao_id', id);
+      if (data.persona_ids.length > 0) {
+        const personaRelations = data.persona_ids.map(persona_id => ({
+          comunicacao_id: id,
+          persona_id
+        }));
+        const { error: personaError } = await supabase
+          .from('comunicacao_personas')
+          .insert(personaRelations);
+        if (personaError) throw personaError;
+      }
+
+      // Update canal relationships
+      await supabase.from('comunicacao_canais').delete().eq('comunicacao_id', id);
+      if (data.canal_ids.length > 0) {
+        const canalRelations = data.canal_ids.map(canal_id => ({
+          comunicacao_id: id,
+          canal_id
+        }));
+        const { error: canalError } = await supabase
+          .from('comunicacao_canais')
+          .insert(canalRelations);
+        if (canalError) throw canalError;
+      }
+
+      await fetchAllData();
+      toast({
+        title: "Sucesso",
+        description: "Comunicação atualizada com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar comunicação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a comunicação",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchAllData();
   }, []);

@@ -303,6 +303,7 @@ export function useSupabaseData() {
     addPessoa,
     deletePessoa,
     deleteComunicacao,
+    updateComunicacao,
     refetch: fetchAllData,
   };
 }

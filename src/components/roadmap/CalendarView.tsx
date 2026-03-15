@@ -153,7 +153,14 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   };
 
   const days = generateTimelineDays();
-  const filteredPessoas = filters.pessoa === 'Todos' ? supabaseData.pessoas.map(p => p.nome) : [filters.pessoa];
+  // Filtrar comunicações e agrupar por nome_acao
+  const filteredComunicacoes = supabaseData.comunicacoes.filter(c => {
+    if (filters.pessoa !== 'Todos' && c.pessoa?.nome !== filters.pessoa) return false;
+    if (filters.categoria !== 'Todos' && c.categoria?.nome !== filters.categoria) return false;
+    return true;
+  });
+
+  const uniqueActions = Array.from(new Set(filteredComunicacoes.map(c => c.nome_acao))).sort();
 
   const getMarcoSpan = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);

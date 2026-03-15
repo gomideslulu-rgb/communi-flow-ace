@@ -531,7 +531,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   const dayOfWeek = currentDate.getDay();
                   const isWeekendDay = dayOfWeek === 0 || dayOfWeek === 6;
                   
-                  const hasComm = filteredPessoas.some(pessoa => checkConflicts(day, pessoa).comunicacoes.length > 0);
+                  const hasComm = filteredComunicacoes.some(c => c.data_inicio === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
                   
                   if (!isWeekendDay && !hasComm) {
                     availableDays.push(day);

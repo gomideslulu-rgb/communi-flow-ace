@@ -62,6 +62,7 @@ interface CalendarViewProps {
     comunicacoes: ComunicacaoDetalhada[];
     loading: boolean;
     deleteComunicacao: (id: string) => Promise<void>;
+    updateComunicacao?: (id: string, data: any) => Promise<void>;
   };
 }
 

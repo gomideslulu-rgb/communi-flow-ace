@@ -70,6 +70,9 @@ export function CommunicationForm({
   const [showPersonaForm, setShowPersonaForm] = useState(false);
   const [newCanal, setNewCanal] = useState('');
   const [showCanalForm, setShowCanalForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editData, setEditData] = useState<ComunicacaoForm & { id: string } | null>(null);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.pessoa_id || !formData.categoria_id || !formData.instituicao_id || !formData.persona_ids?.length || !formData.safras?.length) {

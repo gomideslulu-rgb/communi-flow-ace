@@ -110,6 +110,7 @@ export function useSupabaseData() {
         repiques: com.repiques || [],
         ativo: com.ativo,
         safras: com.safras || [],
+        modalidades: com.modalidades || [],
         pessoa: com.pessoa,
         pessoa_id: com.pessoa_id,
         categoria: com.categoria,

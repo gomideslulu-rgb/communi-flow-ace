@@ -570,6 +570,253 @@ export function CommunicationForm({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Lista de Comunicações Cadastradas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="h-5 w-5" />
+              Comunicações Cadastradas ({supabaseData.comunicacoes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {supabaseData.comunicacoes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma comunicação cadastrada ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {supabaseData.comunicacoes.map(com => (
+                  <div key={com.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/30 transition-colors">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-2 items-center">
+                      <div>
+                        <div className="text-sm font-medium">{com.nome_acao || '—'}</div>
+                        <div className="text-xs text-muted-foreground">{com.pessoa?.nome || 'N/A'}</div>
+                      </div>
+                      <div className="text-xs">
+                        <Badge variant="outline" style={{ borderColor: com.categoria?.cor, color: com.categoria?.cor }}>
+                          {com.categoria?.nome}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {com.data_inicio}{com.data_fim ? ` → ${com.data_fim}` : ''}
+                      </div>
+                      <div className="text-xs">
+                        <Badge variant="secondary">{com.tipo_disparo}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(com.personas || []).slice(0, 3).map(p => (
+                          <span key={p?.id} className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: p?.cor }} title={p?.nome} />
+                        ))}
+                        {(com.personas || []).length > 3 && <span className="text-xs text-muted-foreground">+{(com.personas || []).length - 3}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          setEditData({
+                            id: com.id,
+                            pessoa_id: com.pessoa_id,
+                            nome_acao: com.nome_acao,
+                            categoria_id: com.categoria_id,
+                            instituicao_id: com.instituicao_id,
+                            persona_ids: (com.personas || []).map(p => p?.id).filter(Boolean) as string[],
+                            tipo_disparo: com.tipo_disparo,
+                            data_inicio: com.data_inicio,
+                            data_fim: com.data_fim || '',
+                            canal_ids: (com.canais || []).map(c => c?.id).filter(Boolean) as string[],
+                            repiques: com.repiques || [],
+                            ativo: com.ativo,
+                            safras: com.safras || [],
+                            modalidades: com.modalidades || [],
+                          });
+                          setEditDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                        onClick={() => supabaseData.deleteComunicacao(com.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Comunicação</DialogTitle>
+            </DialogHeader>
+            {editData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Pessoa</Label>
+                    <Select value={editData.pessoa_id} onValueChange={v => setEditData({ ...editData, pessoa_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.pessoas.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome da Ação</Label>
+                    <Input value={editData.nome_acao} onChange={e => setEditData({ ...editData, nome_acao: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select value={editData.categoria_id} onValueChange={v => setEditData({ ...editData, categoria_id: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Instituição</Label>
+                    <Select value={editData.instituicao_id} onValueChange={v => setEditData({ ...editData, instituicao_id: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.instituicoes.map(i => <SelectItem key={i.id} value={i.id}>{i.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Personas</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {supabaseData.personas.map(persona => (
+                      <div key={persona.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={editData.persona_ids.includes(persona.id)}
+                          onCheckedChange={checked => {
+                            const ids = checked
+                              ? [...editData.persona_ids, persona.id]
+                              : editData.persona_ids.filter(id => id !== persona.id);
+                            setEditData({ ...editData, persona_ids: ids });
+                          }}
+                        />
+                        <Label className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: persona.cor }} />
+                          {persona.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Disparo</Label>
+                    <Select value={editData.tipo_disparo} onValueChange={v => setEditData({ ...editData, tipo_disparo: v as any })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pontual">Pontual</SelectItem>
+                        <SelectItem value="Régua Fechada">Régua Fechada</SelectItem>
+                        <SelectItem value="Régua Aberta">Régua Aberta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data Início</Label>
+                    <Input type="date" value={editData.data_inicio} onChange={e => setEditData({ ...editData, data_inicio: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data Fim</Label>
+                    <Input type="date" value={editData.data_fim} onChange={e => setEditData({ ...editData, data_fim: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Período/Safra</Label>
+                  <div className="flex gap-4">
+                    {['26.1', '26.2', '26.3', '26.4'].map(s => (
+                      <div key={s} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={editData.safras.includes(s)}
+                          onCheckedChange={checked => {
+                            const safras = checked ? [...editData.safras, s] : editData.safras.filter(x => x !== s);
+                            setEditData({ ...editData, safras });
+                          }}
+                        />
+                        <Label>{s}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Modalidade</Label>
+                  <div className="flex gap-4">
+                    {['Ao Vivo', 'Presencial', 'Semi'].map(mod => (
+                      <div key={mod} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={editData.modalidades.includes(mod)}
+                          onCheckedChange={checked => {
+                            const modalidades = checked ? [...editData.modalidades, mod] : editData.modalidades.filter(m => m !== mod);
+                            setEditData({ ...editData, modalidades });
+                          }}
+                        />
+                        <Label>{mod}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Canais</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {supabaseData.canais.map(canal => (
+                      <div key={canal.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={editData.canal_ids.includes(canal.id)}
+                          onCheckedChange={checked => {
+                            const ids = checked ? [...editData.canal_ids, canal.id] : editData.canal_ids.filter(id => id !== canal.id);
+                            setEditData({ ...editData, canal_ids: ids });
+                          }}
+                        />
+                        <Label>{canal.nome}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={editData.ativo}
+                    onCheckedChange={checked => setEditData({ ...editData, ativo: !!checked })}
+                  />
+                  <Label>Ativo</Label>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={async () => {
+                if (!editData) return;
+                try {
+                  await supabaseData.updateComunicacao(editData.id, editData);
+                  setEditDialogOpen(false);
+                  setEditData(null);
+                } catch (e) { /* handled in hook */ }
+              }}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>;
 }

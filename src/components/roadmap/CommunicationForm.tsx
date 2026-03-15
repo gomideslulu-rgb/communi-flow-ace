@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, X, AlertTriangle, Info } from 'lucide-react';
+import { Plus, X, AlertTriangle, Info, Pencil, Trash2, List } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';
 import { useComunicacoes, type ComunicacaoForm } from '@/hooks/useComunicacoes';
+
 interface CommunicationFormProps {
   supabaseData: {
     pessoas: any[];
@@ -23,6 +25,8 @@ interface CommunicationFormProps {
     loading: boolean;
     addPessoa: (nome: string) => Promise<any>;
     deletePessoa: (id: string) => Promise<void>;
+    deleteComunicacao: (id: string) => Promise<void>;
+    updateComunicacao: (id: string, data: any) => Promise<void>;
     refetch: () => Promise<void>;
   };
 }

@@ -40,6 +40,7 @@ export interface ComunicacaoDetalhada {
   repiques: string[];
   ativo: boolean;
   safras: string[];
+  modalidades: string[];
   pessoa: Pessoa;
   pessoa_id: string;
   categoria: Categoria;

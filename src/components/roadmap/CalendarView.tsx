@@ -62,6 +62,7 @@ interface CalendarViewProps {
     comunicacoes: ComunicacaoDetalhada[];
     loading: boolean;
     deleteComunicacao: (id: string) => Promise<void>;
+    updateComunicacao?: (id: string, data: any) => Promise<void>;
   };
 }
 
@@ -400,7 +401,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                         const weekend = isWeekend(day);
                         
-                        // Buscar comunicações desta ação neste dia
                         const comunicacoesDoDay = actionComunicacoes.filter(comm => {
                           if (comm.tipo_disparo === 'Régua Aberta' && comm.data_fim) {
                             return targetDate >= comm.data_inicio && targetDate <= comm.data_fim;
@@ -408,7 +408,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           return comm.data_inicio === targetDate;
                         });
 
-                        // Pegar apenas uma comunicação representativa por dia (evitar duplicatas visuais)
                         const comunicacaoRepresentativa = comunicacoesDoDay.length > 0 ? comunicacoesDoDay[0] : null;
                         const hasActivity = comunicacoesDoDay.length > 0;
                         const conflictInfo = checkConflicts(day, 'Todos');
@@ -416,55 +415,60 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           ? supabaseData.personas.find(p => (comunicacaoRepresentativa.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#6b7280'
                           : undefined;
 
-                        // Régua aberta: verificar se é uma barra contínua
                         const reguaAberta = comunicacoesDoDay.find(c => c.tipo_disparo === 'Régua Aberta');
                         const isRegua = !!reguaAberta;
 
+                        const cellContent = (
+                          <div className={`
+                            border-r border-b border-border/40 min-h-[44px] cursor-pointer relative flex items-center justify-center
+                            ${weekend ? 'bg-muted/30' : 'bg-background'}
+                            ${hasActivity ? 'hover:opacity-80' : 'hover:bg-accent/20'}
+                            transition-colors duration-150
+                          `}>
+                            {isRegua && reguaAberta && (() => {
+                              const span = getReguaSpan(reguaAberta, day);
+                              if (span <= 0) return null;
+                              if (!isFirstVisibleDayRegua(reguaAberta, day)) {
+                                return <div className="absolute inset-0 flex items-center">
+                                  <div className="w-full h-2 rounded-none" style={{ backgroundColor: personaColor, opacity: 0.6 }} />
+                                </div>;
+                              }
+                              return <div
+                                className="absolute left-0 h-2 rounded-r"
+                                style={{
+                                  backgroundColor: personaColor,
+                                  width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 0}px)` : '100%',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  zIndex: 20,
+                                  pointerEvents: 'none'
+                                }}
+                              />;
+                            })()}
+
+                            {hasActivity && !isRegua && (
+                              <div
+                                className="w-7 h-7 rounded-md text-white text-[10px] flex items-center justify-center font-semibold shadow-sm"
+                                style={{ backgroundColor: personaColor }}
+                                title={comunicacaoRepresentativa?.tipo_disparo}
+                              >
+                                {comunicacoesDoDay.length > 1 ? `${comunicacoesDoDay.length}` : comunicacaoRepresentativa?.tipo_disparo?.charAt(0) || '•'}
+                              </div>
+                            )}
+
+                            {conflictInfo.temConflito && hasActivity && (
+                              <AlertTriangle className="absolute top-0.5 right-0.5 h-3 w-3 text-destructive" />
+                            )}
+                          </div>
+                        );
+
+                        if (!hasActivity) {
+                          return <div key={day}>{cellContent}</div>;
+                        }
+
                         return <Tooltip key={day}>
                           <TooltipTrigger asChild>
-                            <div className={`
-                              border-r border-b border-border/40 min-h-[44px] cursor-pointer relative flex items-center justify-center
-                              ${weekend ? 'bg-muted/30' : 'bg-background'}
-                              ${hasActivity ? 'hover:opacity-80' : 'hover:bg-accent/20'}
-                              transition-colors duration-150
-                            `}>
-                              {isRegua && reguaAberta && (() => {
-                                const span = getReguaSpan(reguaAberta, day);
-                                if (span <= 0) return null;
-                                if (!isFirstVisibleDayRegua(reguaAberta, day)) {
-                                  // Continuação da barra - mostrar faixa fina
-                                  return <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full h-2 rounded-none" style={{ backgroundColor: personaColor, opacity: 0.6 }} />
-                                  </div>;
-                                }
-                                // Início da barra
-                                return <div
-                                  className="absolute left-0 h-2 rounded-r"
-                                  style={{
-                                    backgroundColor: personaColor,
-                                    width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 0}px)` : '100%',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    zIndex: 20,
-                                    pointerEvents: 'none'
-                                  }}
-                                />;
-                              })()}
-
-                              {hasActivity && !isRegua && (
-                                <div
-                                  className="w-7 h-7 rounded-md text-white text-[10px] flex items-center justify-center font-semibold shadow-sm"
-                                  style={{ backgroundColor: personaColor }}
-                                  title={comunicacaoRepresentativa?.tipo_disparo}
-                                >
-                                  {comunicacoesDoDay.length > 1 ? `${comunicacoesDoDay.length}` : comunicacaoRepresentativa?.tipo_disparo?.charAt(0) || '•'}
-                                </div>
-                              )}
-
-                              {conflictInfo.temConflito && hasActivity && (
-                                <AlertTriangle className="absolute top-0.5 right-0.5 h-3 w-3 text-destructive" />
-                              )}
-                            </div>
+                            {cellContent}
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-xs">
                             <div className="space-y-2">
@@ -472,7 +476,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 {nomeAcao} — Dia {day}
                               </div>
                               {weekend && <div className="text-xs text-muted-foreground">Fim de semana</div>}
-                              {comunicacoesDoDay.length > 0 && <div className="space-y-1.5">
+                              <div className="space-y-1.5">
                                 {comunicacoesDoDay.map(comunicacao => <div key={comunicacao.id} className="text-xs space-y-0.5 border-b border-border/50 pb-1.5 last:border-b-0 last:pb-0">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 space-y-0.5">
@@ -510,7 +514,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                     </Button>
                                   </div>
                                 </div>)}
-                              </div>}
+                              </div>
                               {conflictInfo.marcos.length > 0 && <div>
                                 <div className="font-medium text-xs text-blue-600">Marcos Acadêmicos:</div>
                                 {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-xs text-muted-foreground">

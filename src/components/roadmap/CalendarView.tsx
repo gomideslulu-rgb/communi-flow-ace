@@ -161,7 +161,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     return true;
   });
 
-  const uniqueActions = Array.from(new Set(filteredComunicacoes.map(c => c.nome_acao))).sort();
+  // Each communication gets its own row (no merging by name)
+  const sortedComunicacoes = [...filteredComunicacoes].sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
 
   const getMarcoSpan = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);

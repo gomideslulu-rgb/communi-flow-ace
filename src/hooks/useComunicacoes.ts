@@ -20,126 +20,35 @@ export interface ComunicacaoForm {
 export function useComunicacoes() {
   const saveComunicacao = async (formData: ComunicacaoForm) => {
     try {
-      // Calcular as datas das comunicações com base no tipo de disparo
-      const comunicacoesParaInserir = [];
+      // Sempre salvar como um único registro, independente do tipo de disparo
+      const comunicacaoParaInserir = {
+        pessoa_id: formData.pessoa_id,
+        nome_acao: formData.nome_acao,
+        categoria_id: formData.categoria_id,
+        instituicao_id: formData.instituicao_id,
+        tipo_disparo: formData.tipo_disparo,
+        data_inicio: formData.data_inicio,
+        data_fim: formData.data_fim || null,
+        repiques: formData.repiques,
+        ativo: formData.ativo,
+        safras: formData.safras,
+        modalidades: formData.modalidades
+      };
 
-      if (formData.tipo_disparo === 'Régua Fechada' && formData.data_fim) {
-        // Régua Fechada: comunicação no início, nos repiques e no fim
-        const dataInicio = new Date(formData.data_inicio);
-        const dataFim = new Date(formData.data_fim);
-
-        // Comunicação na data de início
-        comunicacoesParaInserir.push({
-          pessoa_id: formData.pessoa_id,
-          nome_acao: formData.nome_acao,
-          categoria_id: formData.categoria_id,
-          instituicao_id: formData.instituicao_id,
-          tipo_disparo: formData.tipo_disparo,
-          data_inicio: formData.data_inicio,
-          data_fim: formData.data_fim,
-          repiques: formData.repiques,
-          ativo: formData.ativo,
-          safras: formData.safras,
-          modalidades: formData.modalidades
-        });
-
-        // Comunicações nos repiques (data início + X dias)
-        formData.repiques.forEach(repique => {
-          // Extrair o número do repique (ex: "d+3" -> 3)
-          const dias = parseInt(repique.replace(/\D/g, ''));
-          if (!isNaN(dias)) {
-            const dataRepique = new Date(dataInicio);
-            dataRepique.setDate(dataRepique.getDate() + dias);
-            
-            // Formatar a data como YYYY-MM-DD
-            const dataRepiqueFormatada = dataRepique.toISOString().split('T')[0];
-
-            comunicacoesParaInserir.push({
-              pessoa_id: formData.pessoa_id,
-              nome_acao: `${formData.nome_acao} (${repique})`,
-              categoria_id: formData.categoria_id,
-              instituicao_id: formData.instituicao_id,
-              tipo_disparo: formData.tipo_disparo,
-              data_inicio: dataRepiqueFormatada,
-              data_fim: formData.data_fim,
-              repiques: formData.repiques,
-              ativo: formData.ativo,
-              safras: formData.safras,
-              modalidades: formData.modalidades
-            });
-          }
-        });
-
-        // Comunicação na data de fim (apenas se for diferente da data de início)
-        if (formData.data_fim !== formData.data_inicio) {
-          comunicacoesParaInserir.push({
-            pessoa_id: formData.pessoa_id,
-            nome_acao: `${formData.nome_acao} (Final)`,
-            categoria_id: formData.categoria_id,
-            instituicao_id: formData.instituicao_id,
-            tipo_disparo: formData.tipo_disparo,
-            data_inicio: formData.data_fim,
-            data_fim: formData.data_fim,
-            repiques: formData.repiques,
-            ativo: formData.ativo,
-            safras: formData.safras,
-            modalidades: formData.modalidades
-          });
-        }
-      } else if (formData.tipo_disparo === 'Régua Aberta' && formData.data_fim) {
-        // Régua Aberta: um único registro com data_inicio e data_fim representando o período
-        comunicacoesParaInserir.push({
-          pessoa_id: formData.pessoa_id,
-          nome_acao: formData.nome_acao,
-          categoria_id: formData.categoria_id,
-          instituicao_id: formData.instituicao_id,
-          tipo_disparo: formData.tipo_disparo,
-          data_inicio: formData.data_inicio,
-          data_fim: formData.data_fim,
-          repiques: formData.repiques,
-          ativo: formData.ativo,
-          safras: formData.safras,
-          modalidades: formData.modalidades
-        });
-      } else {
-        // Pontual: apenas uma comunicação
-        comunicacoesParaInserir.push({
-          pessoa_id: formData.pessoa_id,
-          nome_acao: formData.nome_acao,
-          categoria_id: formData.categoria_id,
-          instituicao_id: formData.instituicao_id,
-          tipo_disparo: formData.tipo_disparo,
-          data_inicio: formData.data_inicio,
-          data_fim: formData.data_fim || null,
-          repiques: formData.repiques,
-          ativo: formData.ativo,
-          safras: formData.safras,
-          modalidades: formData.modalidades
-        });
-      }
-
-      // Inserir todas as comunicações
-      const { data: comunicacoes, error: comunicacaoError } = await supabase
+      const { data: comunicacao, error: comunicacaoError } = await supabase
         .from('comunicacoes')
-        .insert(comunicacoesParaInserir)
-        .select();
+        .insert([comunicacaoParaInserir])
+        .select()
+        .single();
 
       if (comunicacaoError) throw comunicacaoError;
 
-      // Pegar a primeira comunicação para os relacionamentos
-      const comunicacaoPrincipal = comunicacoes[0];
-
-      // Insert persona relationships para todas as comunicações criadas
+      // Insert persona relationships
       if (formData.persona_ids.length > 0) {
-        const personaRelations: any[] = [];
-        comunicacoes.forEach(comunicacao => {
-          formData.persona_ids.forEach(persona_id => {
-            personaRelations.push({
-              comunicacao_id: comunicacao.id,
-              persona_id
-            });
-          });
-        });
+        const personaRelations = formData.persona_ids.map(persona_id => ({
+          comunicacao_id: comunicacao.id,
+          persona_id
+        }));
 
         const { error: personaError } = await supabase
           .from('comunicacao_personas')
@@ -148,17 +57,12 @@ export function useComunicacoes() {
         if (personaError) throw personaError;
       }
 
-      // Insert canal relationships para todas as comunicações criadas
+      // Insert canal relationships
       if (formData.canal_ids.length > 0) {
-        const canalRelations: any[] = [];
-        comunicacoes.forEach(comunicacao => {
-          formData.canal_ids.forEach(canal_id => {
-            canalRelations.push({
-              comunicacao_id: comunicacao.id,
-              canal_id
-            });
-          });
-        });
+        const canalRelations = formData.canal_ids.map(canal_id => ({
+          comunicacao_id: comunicacao.id,
+          canal_id
+        }));
 
         const { error: canalError } = await supabase
           .from('comunicacao_canais')
@@ -167,18 +71,12 @@ export function useComunicacoes() {
         if (canalError) throw canalError;
       }
 
-      const mensagem = formData.tipo_disparo === 'Régua Fechada' 
-        ? `${comunicacoes.length} comunicações criadas com sucesso (início, ${formData.repiques.length} repique(s) e fim)`
-        : formData.tipo_disparo === 'Régua Aberta'
-        ? `${comunicacoes.length} comunicações criadas com sucesso (do início ao fim)`
-        : "Comunicação salva com sucesso";
-
       toast({
         title: "Sucesso",
-        description: mensagem,
+        description: "Comunicação salva com sucesso",
       });
 
-      return comunicacaoPrincipal;
+      return comunicacao;
     } catch (error) {
       console.error('Erro ao salvar comunicação:', error);
       toast({

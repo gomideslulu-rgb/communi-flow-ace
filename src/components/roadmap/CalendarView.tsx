@@ -161,7 +161,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     return true;
   });
 
-  const uniqueActions = Array.from(new Set(filteredComunicacoes.map(c => c.nome_acao))).sort();
+  // Each communication gets its own row (no merging by name)
+  const sortedComunicacoes = [...filteredComunicacoes].sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
 
   const getMarcoSpan = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
@@ -383,14 +384,14 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
 
                 {/* Ações */}
                 <div className="space-y-1 mt-2">
-                {uniqueActions.map((nomeAcao, actionIndex) => {
-                  const actionComunicacoes = filteredComunicacoes.filter(c => c.nome_acao === nomeAcao);
-                  const categoriaColor = actionComunicacoes[0]?.categoria?.cor || '#6b7280';
+                {sortedComunicacoes.map((comunicacao) => {
+                  const categoriaColor = comunicacao.categoria?.cor || '#6b7280';
+                  const personaColor = supabaseData.personas.find(p => (comunicacao.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#6b7280';
                   
-                  return <div key={nomeAcao} className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden" style={{ borderLeft: `3px solid ${categoriaColor}` }}>
+                  return <div key={comunicacao.id} className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden" style={{ borderLeft: `3px solid ${categoriaColor}` }}>
                     <div className="bg-muted/50 p-2 font-medium border border-l-0 flex items-center gap-2 min-h-[44px]">
-                      <span className="text-xs text-foreground truncate" title={nomeAcao}>
-                        {nomeAcao}
+                      <span className="text-xs text-foreground truncate" title={comunicacao.nome_acao}>
+                        {comunicacao.nome_acao}
                       </span>
                     </div>
                     <div className="grid gap-0" style={{
@@ -401,22 +402,13 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                         const weekend = isWeekend(day);
                         
-                        const comunicacoesDoDay = actionComunicacoes.filter(comm => {
-                          if (comm.tipo_disparo === 'Régua Aberta' && comm.data_fim) {
-                            return targetDate >= comm.data_inicio && targetDate <= comm.data_fim;
-                          }
-                          return comm.data_inicio === targetDate;
-                        });
+                        const isActive = comunicacao.tipo_disparo === 'Régua Aberta' && comunicacao.data_fim
+                          ? targetDate >= comunicacao.data_inicio && targetDate <= comunicacao.data_fim
+                          : comunicacao.data_inicio === targetDate;
 
-                        const comunicacaoRepresentativa = comunicacoesDoDay.length > 0 ? comunicacoesDoDay[0] : null;
-                        const hasActivity = comunicacoesDoDay.length > 0;
+                        const hasActivity = isActive;
                         const conflictInfo = checkConflicts(day, 'Todos');
-                        const personaColor = comunicacaoRepresentativa 
-                          ? supabaseData.personas.find(p => (comunicacaoRepresentativa.personas || []).some(cp => cp?.nome === p.nome))?.cor || '#6b7280'
-                          : undefined;
-
-                        const reguaAberta = comunicacoesDoDay.find(c => c.tipo_disparo === 'Régua Aberta');
-                        const isRegua = !!reguaAberta;
+                        const isRegua = comunicacao.tipo_disparo === 'Régua Aberta';
 
                         const cellContent = (
                           <div className={`
@@ -425,34 +417,35 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                             ${hasActivity ? 'hover:opacity-80' : 'hover:bg-accent/20'}
                             transition-colors duration-150
                           `}>
-                            {isRegua && reguaAberta && (() => {
-                              const span = getReguaSpan(reguaAberta, day);
-                              if (span <= 0) return null;
-                              if (!isFirstVisibleDayRegua(reguaAberta, day)) {
-                                return <div className="absolute inset-0 flex items-center">
-                                  <div className="w-full h-2 rounded-none" style={{ backgroundColor: personaColor, opacity: 0.6 }} />
-                                </div>;
+                            {isRegua && hasActivity && (() => {
+                              const isFirst = isFirstVisibleDayRegua(comunicacao, day);
+                              const span = isFirst ? getReguaSpan(comunicacao, day) : 0;
+                              
+                              if (isFirst && span > 0) {
+                                return <div
+                                  className="absolute left-0 h-2 rounded-r"
+                                  style={{
+                                    backgroundColor: personaColor,
+                                    width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 0}px)` : '100%',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    zIndex: 20,
+                                    pointerEvents: 'none'
+                                  }}
+                                />;
                               }
-                              return <div
-                                className="absolute left-0 h-2 rounded-r"
-                                style={{
-                                  backgroundColor: personaColor,
-                                  width: span > 1 ? `calc(${span * 100}% + ${(span - 1) * 0}px)` : '100%',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 20,
-                                  pointerEvents: 'none'
-                                }}
-                              />;
+                              return <div className="absolute inset-0 flex items-center">
+                                <div className="w-full h-2 rounded-none" style={{ backgroundColor: personaColor, opacity: 0.6 }} />
+                              </div>;
                             })()}
 
                             {hasActivity && !isRegua && (
                               <div
                                 className="w-7 h-7 rounded-md text-white text-[10px] flex items-center justify-center font-semibold shadow-sm"
                                 style={{ backgroundColor: personaColor }}
-                                title={comunicacaoRepresentativa?.tipo_disparo}
+                                title={comunicacao.tipo_disparo}
                               >
-                                {comunicacoesDoDay.length > 1 ? `${comunicacoesDoDay.length}` : comunicacaoRepresentativa?.tipo_disparo?.charAt(0) || '•'}
+                                {comunicacao.tipo_disparo?.charAt(0) || '•'}
                               </div>
                             )}
 
@@ -473,48 +466,48 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           <TooltipContent side="top" className="max-w-xs">
                             <div className="space-y-2">
                               <div className="font-medium text-sm">
-                                {nomeAcao} — Dia {day}
+                                {comunicacao.nome_acao} — Dia {day}
                               </div>
                               {weekend && <div className="text-xs text-muted-foreground">Fim de semana</div>}
-                              <div className="space-y-1.5">
-                                {comunicacoesDoDay.map(comunicacao => <div key={comunicacao.id} className="text-xs space-y-0.5 border-b border-border/50 pb-1.5 last:border-b-0 last:pb-0">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 space-y-0.5">
-                                      <div className="text-muted-foreground">
-                                        <strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        <strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        <strong>Categoria:</strong> {comunicacao.categoria?.nome}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        <strong>Instituição:</strong> {comunicacao.instituicao?.nome}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        <strong>Tipo:</strong> {comunicacao.tipo_disparo}
-                                      </div>
-                                      {(comunicacao.canais || []).length > 0 && (
-                                        <div className="text-muted-foreground">
-                                          <strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-5 w-5 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10 shrink-0"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteComunicacao(comunicacao.id);
-                                      }}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
+                              <div className="text-xs space-y-0.5">
+                                <div className="text-muted-foreground">
+                                  <strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  <strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  <strong>Categoria:</strong> {comunicacao.categoria?.nome}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  <strong>Instituição:</strong> {comunicacao.instituicao?.nome}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  <strong>Tipo:</strong> {comunicacao.tipo_disparo}
+                                </div>
+                                {comunicacao.tipo_disparo === 'Régua Aberta' && comunicacao.data_fim && (
+                                  <div className="text-muted-foreground">
+                                    <strong>Período:</strong> {comunicacao.data_inicio} até {comunicacao.data_fim}
                                   </div>
-                                </div>)}
+                                )}
+                                {(comunicacao.canais || []).length > 0 && (
+                                  <div className="text-muted-foreground">
+                                    <strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}
+                                  </div>
+                                )}
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-auto px-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteComunicacao(comunicacao.id);
+                                }}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                <span className="text-[10px]">Excluir</span>
+                              </Button>
                               {conflictInfo.marcos.length > 0 && <div>
                                 <div className="font-medium text-xs text-blue-600">Marcos Acadêmicos:</div>
                                 {conflictInfo.marcos.map(marco => <div key={marco.id} className="text-xs text-muted-foreground">

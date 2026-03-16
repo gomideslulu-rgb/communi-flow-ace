@@ -87,32 +87,20 @@ export function useComunicacoes() {
           });
         }
       } else if (formData.tipo_disparo === 'Régua Aberta' && formData.data_fim) {
-        // Régua Aberta: comunicação para cada dia entre data início e data fim
-        const dataInicio = new Date(formData.data_inicio);
-        const dataFim = new Date(formData.data_fim);
-        
-        // Iterar sobre cada dia entre início e fim
-        const currentDate = new Date(dataInicio);
-        while (currentDate <= dataFim) {
-          const dataFormatada = currentDate.toISOString().split('T')[0];
-          
-          comunicacoesParaInserir.push({
-            pessoa_id: formData.pessoa_id,
-            nome_acao: formData.nome_acao,
-            categoria_id: formData.categoria_id,
-            instituicao_id: formData.instituicao_id,
-            tipo_disparo: formData.tipo_disparo,
-            data_inicio: dataFormatada,
-            data_fim: formData.data_fim,
-            repiques: formData.repiques,
-            ativo: formData.ativo,
-            safras: formData.safras,
-            modalidades: formData.modalidades
-          });
-          
-          // Avançar para o próximo dia
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
+        // Régua Aberta: um único registro com data_inicio e data_fim representando o período
+        comunicacoesParaInserir.push({
+          pessoa_id: formData.pessoa_id,
+          nome_acao: formData.nome_acao,
+          categoria_id: formData.categoria_id,
+          instituicao_id: formData.instituicao_id,
+          tipo_disparo: formData.tipo_disparo,
+          data_inicio: formData.data_inicio,
+          data_fim: formData.data_fim,
+          repiques: formData.repiques,
+          ativo: formData.ativo,
+          safras: formData.safras,
+          modalidades: formData.modalidades
+        });
       } else {
         // Pontual: apenas uma comunicação
         comunicacoesParaInserir.push({

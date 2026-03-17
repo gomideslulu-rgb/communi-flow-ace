@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      campanhas: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       canais: {
         Row: {
           created_at: string
@@ -134,6 +158,7 @@ export type Database = {
       comunicacoes: {
         Row: {
           ativo: boolean
+          campanha_id: string | null
           categoria_id: string
           created_at: string
           data_fim: string | null
@@ -151,6 +176,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          campanha_id?: string | null
           categoria_id: string
           created_at?: string
           data_fim?: string | null
@@ -168,6 +194,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          campanha_id?: string | null
           categoria_id?: string
           created_at?: string
           data_fim?: string | null
@@ -184,6 +211,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "comunicacoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comunicacoes_categoria_id_fkey"
             columns: ["categoria_id"]

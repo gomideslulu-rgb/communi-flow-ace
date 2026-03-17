@@ -31,6 +31,12 @@ export interface Canal {
   nome: string;
 }
 
+export interface Campanha {
+  id: string;
+  nome: string;
+  cor: string;
+}
+
 export interface ComunicacaoDetalhada {
   id: string;
   nome_acao: string;
@@ -47,6 +53,8 @@ export interface ComunicacaoDetalhada {
   categoria_id: string;
   instituicao: Instituicao;
   instituicao_id: string;
+  campanha: Campanha | null;
+  campanha_id: string | null;
   personas: Persona[];
   canais: Canal[];
 }
@@ -57,6 +65,7 @@ export function useSupabaseData() {
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [personasData, setPersonasData] = useState<Persona[]>([]);
   const [canais, setCanais] = useState<Canal[]>([]);
+  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
   const [comunicacoes, setComunicacoes] = useState<ComunicacaoDetalhada[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,6 +79,7 @@ export function useSupabaseData() {
         instituicoesResult,
         personasResult,
         canaisResult,
+        campanhasResult,
         comunicacoesResult
       ] = await Promise.all([
         supabase.from('pessoas').select('*'),
@@ -77,11 +87,13 @@ export function useSupabaseData() {
         supabase.from('instituicoes').select('*'),
         supabase.from('personas').select('*'),
         supabase.from('canais').select('*'),
+        supabase.from('campanhas').select('*'),
         supabase.from('comunicacoes').select(`
           *,
           pessoa:pessoas(*),
           categoria:categorias(*),
           instituicao:instituicoes(*),
+          campanha:campanhas(*),
           personas:comunicacao_personas(persona:personas(*)),
           canais:comunicacao_canais(canal:canais(*))
         `)
@@ -92,6 +104,7 @@ export function useSupabaseData() {
       if (instituicoesResult.error) throw instituicoesResult.error;
       if (personasResult.error) throw personasResult.error;
       if (canaisResult.error) throw canaisResult.error;
+      if (campanhasResult.error) throw campanhasResult.error;
       if (comunicacoesResult.error) throw comunicacoesResult.error;
 
       setPessoas(pessoasResult.data || []);
@@ -99,6 +112,7 @@ export function useSupabaseData() {
       setInstituicoes(instituicoesResult.data || []);
       setPersonasData(personasResult.data || []);
       setCanais(canaisResult.data || []);
+      setCampanhas(campanhasResult.data || []);
       
       // Transform comunicações data
       const comunicacoesTransformadas = comunicacoesResult.data?.map((com: any) => ({
@@ -117,6 +131,8 @@ export function useSupabaseData() {
         categoria_id: com.categoria_id,
         instituicao: com.instituicao,
         instituicao_id: com.instituicao_id,
+        campanha: com.campanha,
+        campanha_id: com.campanha_id,
         personas: com.personas?.map((p: any) => p.persona) || [],
         canais: com.canais?.map((c: any) => c.canal) || []
       })) || [];
@@ -216,6 +232,7 @@ export function useSupabaseData() {
     nome_acao: string;
     categoria_id: string;
     instituicao_id: string;
+    campanha_id?: string | null;
     tipo_disparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
     data_inicio: string;
     data_fim?: string | null;
@@ -234,6 +251,7 @@ export function useSupabaseData() {
           nome_acao: data.nome_acao,
           categoria_id: data.categoria_id,
           instituicao_id: data.instituicao_id,
+          campanha_id: data.campanha_id || null,
           tipo_disparo: data.tipo_disparo,
           data_inicio: data.data_inicio,
           data_fim: data.data_fim || null,
@@ -298,6 +316,7 @@ export function useSupabaseData() {
     instituicoes,
     personas: personasData,
     canais,
+    campanhas,
     comunicacoes,
     loading,
     addPessoa,

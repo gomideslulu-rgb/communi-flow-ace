@@ -21,6 +21,7 @@ interface CommunicationFormProps {
     instituicoes: any[];
     personas: any[];
     canais: any[];
+    campanhas: any[];
     comunicacoes: ComunicacaoDetalhada[];
     loading: boolean;
     addPessoa: (nome: string) => Promise<any>;
@@ -44,6 +45,7 @@ export function CommunicationForm({
     nome_acao: '',
     categoria_id: '',
     instituicao_id: '',
+    campanha_id: '',
     persona_ids: [],
     tipo_disparo: 'Pontual',
     data_inicio: '',
@@ -70,6 +72,9 @@ export function CommunicationForm({
   const [showPersonaForm, setShowPersonaForm] = useState(false);
   const [newCanal, setNewCanal] = useState('');
   const [showCanalForm, setShowCanalForm] = useState(false);
+  const [newCampanha, setNewCampanha] = useState('');
+  const [newCampanhaCor, setNewCampanhaCor] = useState('#6b7280');
+  const [showCampanhaForm, setShowCampanhaForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editData, setEditData] = useState<ComunicacaoForm & { id: string } | null>(null);
@@ -100,6 +105,7 @@ export function CommunicationForm({
         nome_acao: '',
         categoria_id: '',
         instituicao_id: '',
+        campanha_id: '',
         persona_ids: [],
         tipo_disparo: 'Pontual',
         data_inicio: '',
@@ -126,6 +132,7 @@ export function CommunicationForm({
         nome_acao: '',
         categoria_id: '',
         instituicao_id: '',
+        campanha_id: '',
         persona_ids: [],
         tipo_disparo: 'Pontual',
         data_inicio: '',
@@ -294,6 +301,20 @@ export function CommunicationForm({
       } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
     }
   };
+  const addCampanha = async () => {
+    if (newCampanha.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('campanhas').insert([{ nome: newCampanha.trim(), cor: newCampanhaCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCampanha('');
+        setShowCampanhaForm(false);
+        toast({ title: "Sucesso", description: "Campanha adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
   if (supabaseData.loading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }
@@ -354,14 +375,14 @@ export function CommunicationForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria *</Label>
+                  <Label htmlFor="categoria">Produto *</Label>
                   <div className="flex gap-2">
                     <Select value={formData.categoria_id} onValueChange={value => setFormData({
                     ...formData,
                     categoria_id: value
                   })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecionar categoria" />
+                        <SelectValue placeholder="Selecionar produto" />
                       </SelectTrigger>
                       <SelectContent>
                         {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
@@ -374,9 +395,36 @@ export function CommunicationForm({
                     </Button>
                   </div>
                   {showCategoriaForm && <div className="flex gap-2 p-3 border rounded">
-                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Nova categoria" className="flex-1" />
+                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Novo produto" className="flex-1" />
                     <Input type="color" value={newCategoriaCor} onChange={e => setNewCategoriaCor(e.target.value)} className="w-12 p-1 h-9" />
                     <Button type="button" onClick={addCategoria} size="sm">Adicionar</Button>
+                  </div>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="campanha">Campanha *</Label>
+                  <div className="flex gap-2">
+                    <Select value={formData.campanha_id} onValueChange={value => setFormData({
+                    ...formData,
+                    campanha_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar campanha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.campanhas.map(campanha => <SelectItem key={campanha.id} value={campanha.id}>
+                            {campanha.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCampanhaForm(!showCampanhaForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showCampanhaForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCampanha} onChange={e => setNewCampanha(e.target.value)} placeholder="Nova campanha" className="flex-1" />
+                    <Input type="color" value={newCampanhaCor} onChange={e => setNewCampanhaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addCampanha} size="sm">Adicionar</Button>
                   </div>}
                 </div>
 
@@ -621,6 +669,7 @@ export function CommunicationForm({
                             nome_acao: com.nome_acao,
                             categoria_id: com.categoria_id,
                             instituicao_id: com.instituicao_id,
+                            campanha_id: com.campanha_id || '',
                             persona_ids: (com.personas || []).map(p => p?.id).filter(Boolean) as string[],
                             tipo_disparo: com.tipo_disparo,
                             data_inicio: com.data_inicio,
@@ -675,11 +724,20 @@ export function CommunicationForm({
                     <Input value={editData.nome_acao} onChange={e => setEditData({ ...editData, nome_acao: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria</Label>
+                    <Label>Produto</Label>
                     <Select value={editData.categoria_id} onValueChange={v => setEditData({ ...editData, categoria_id: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {supabaseData.categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Campanha</Label>
+                    <Select value={editData.campanha_id} onValueChange={v => setEditData({ ...editData, campanha_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecionar campanha" /></SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.campanhas.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

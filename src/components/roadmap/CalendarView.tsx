@@ -89,11 +89,22 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const filteredComunicacoes = supabaseData.comunicacoes.filter(c => {
     if (filters.pessoa !== 'Todos' && c.pessoa?.nome !== filters.pessoa) return false;
     if (filters.categoria !== 'Todos' && c.categoria?.nome !== filters.categoria) return false;
+    if (filters.campanha !== 'Todos' && c.campanha?.nome !== filters.campanha) return false;
     return true;
   });
 
-  // Sort by name so same-named ones are adjacent
-  const sortedComunicacoes = [...filteredComunicacoes].sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
+  // Group by campanha
+  const campanhaGroups = supabaseData.campanhas.map(campanha => ({
+    campanha,
+    comunicacoes: filteredComunicacoes
+      .filter(c => c.campanha_id === campanha.id)
+      .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao))
+  })).filter(g => g.comunicacoes.length > 0);
+
+  // Communications without campanha
+  const semCampanha = filteredComunicacoes
+    .filter(c => !c.campanha_id)
+    .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
 
   // Check if a communication is active on a given day (covers the date range)
   const isComunicacaoActiveOnDay = (com: ComunicacaoDetalhada, day: number) => {

@@ -624,6 +624,7 @@ export function CommunicationForm({
                             nome_acao: com.nome_acao,
                             categoria_id: com.categoria_id,
                             instituicao_id: com.instituicao_id,
+                            campanha_id: com.campanha_id || '',
                             persona_ids: (com.personas || []).map(p => p?.id).filter(Boolean) as string[],
                             tipo_disparo: com.tipo_disparo,
                             data_inicio: com.data_inicio,

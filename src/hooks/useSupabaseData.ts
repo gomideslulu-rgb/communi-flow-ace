@@ -316,6 +316,7 @@ export function useSupabaseData() {
     instituicoes,
     personas: personasData,
     canais,
+    campanhas,
     comunicacoes,
     loading,
     addPessoa,

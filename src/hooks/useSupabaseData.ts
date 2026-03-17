@@ -65,6 +65,7 @@ export function useSupabaseData() {
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [personasData, setPersonasData] = useState<Persona[]>([]);
   const [canais, setCanais] = useState<Canal[]>([]);
+  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
   const [comunicacoes, setComunicacoes] = useState<ComunicacaoDetalhada[]>([]);
   const [loading, setLoading] = useState(true);
 

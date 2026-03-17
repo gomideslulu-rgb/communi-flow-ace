@@ -57,11 +57,12 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const { toast } = useToast();
   const meses = generateMonthList();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthLabel(meses));
-  const [filters, setFilters] = useState({ pessoa: 'Todos', categoria: 'Todos' });
+  const [filters, setFilters] = useState({ pessoa: 'Todos', categoria: 'Todos', campanha: 'Todos' });
   const [refreshKey, setRefreshKey] = useState(0);
 
   const pessoas = ['Todos', ...supabaseData.pessoas.map(p => p.nome)];
   const categorias = ['Todos', ...supabaseData.categorias.map(c => c.nome)];
+  const campanhasFilter = ['Todos', ...supabaseData.campanhas.map(c => c.nome)];
 
   const handleDeleteComunicacao = async (comunicacaoId: string) => {
     try {

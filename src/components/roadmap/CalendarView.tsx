@@ -182,7 +182,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Mês</label>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -202,11 +202,20 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Categoria</label>
+                <label className="text-sm font-medium">Produto</label>
                 <Select value={filters.categoria} onValueChange={value => setFilters(prev => ({ ...prev, categoria: value }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {categorias.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Campanha</label>
+                <Select value={filters.campanha} onValueChange={value => setFilters(prev => ({ ...prev, campanha: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {campanhasFilter.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

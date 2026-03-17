@@ -27,6 +27,7 @@ export function useComunicacoes() {
         nome_acao: formData.nome_acao,
         categoria_id: formData.categoria_id,
         instituicao_id: formData.instituicao_id,
+        campanha_id: formData.campanha_id || null,
         tipo_disparo: formData.tipo_disparo,
         data_inicio: formData.data_inicio,
         data_fim: formData.data_fim || null,

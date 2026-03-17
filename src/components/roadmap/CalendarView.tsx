@@ -45,6 +45,7 @@ interface CalendarViewProps {
     instituicoes: any[];
     personas: any[];
     canais: any[];
+    campanhas: any[];
     comunicacoes: ComunicacaoDetalhada[];
     loading: boolean;
     deleteComunicacao: (id: string) => Promise<void>;

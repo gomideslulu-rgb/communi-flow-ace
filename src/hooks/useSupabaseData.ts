@@ -31,6 +31,12 @@ export interface Canal {
   nome: string;
 }
 
+export interface Campanha {
+  id: string;
+  nome: string;
+  cor: string;
+}
+
 export interface ComunicacaoDetalhada {
   id: string;
   nome_acao: string;

@@ -44,6 +44,7 @@ export function CommunicationForm({
     nome_acao: '',
     categoria_id: '',
     instituicao_id: '',
+    campanha_id: '',
     persona_ids: [],
     tipo_disparo: 'Pontual',
     data_inicio: '',

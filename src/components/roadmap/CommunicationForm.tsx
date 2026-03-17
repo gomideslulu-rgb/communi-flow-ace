@@ -374,14 +374,14 @@ export function CommunicationForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria *</Label>
+                  <Label htmlFor="categoria">Produto *</Label>
                   <div className="flex gap-2">
                     <Select value={formData.categoria_id} onValueChange={value => setFormData({
                     ...formData,
                     categoria_id: value
                   })}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecionar categoria" />
+                        <SelectValue placeholder="Selecionar produto" />
                       </SelectTrigger>
                       <SelectContent>
                         {supabaseData.categorias.map(categoria => <SelectItem key={categoria.id} value={categoria.id}>
@@ -394,9 +394,36 @@ export function CommunicationForm({
                     </Button>
                   </div>
                   {showCategoriaForm && <div className="flex gap-2 p-3 border rounded">
-                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Nova categoria" className="flex-1" />
+                    <Input value={newCategoria} onChange={e => setNewCategoria(e.target.value)} placeholder="Novo produto" className="flex-1" />
                     <Input type="color" value={newCategoriaCor} onChange={e => setNewCategoriaCor(e.target.value)} className="w-12 p-1 h-9" />
                     <Button type="button" onClick={addCategoria} size="sm">Adicionar</Button>
+                  </div>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="campanha">Campanha *</Label>
+                  <div className="flex gap-2">
+                    <Select value={formData.campanha_id} onValueChange={value => setFormData({
+                    ...formData,
+                    campanha_id: value
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar campanha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.campanhas.map(campanha => <SelectItem key={campanha.id} value={campanha.id}>
+                            {campanha.nome}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCampanhaForm(!showCampanhaForm)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {showCampanhaForm && <div className="flex gap-2 p-3 border rounded">
+                    <Input value={newCampanha} onChange={e => setNewCampanha(e.target.value)} placeholder="Nova campanha" className="flex-1" />
+                    <Input type="color" value={newCampanhaCor} onChange={e => setNewCampanhaCor(e.target.value)} className="w-12 p-1 h-9" />
+                    <Button type="button" onClick={addCampanha} size="sm">Adicionar</Button>
                   </div>}
                 </div>
 

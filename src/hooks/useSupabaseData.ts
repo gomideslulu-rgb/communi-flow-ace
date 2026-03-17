@@ -232,6 +232,7 @@ export function useSupabaseData() {
     nome_acao: string;
     categoria_id: string;
     instituicao_id: string;
+    campanha_id?: string | null;
     tipo_disparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
     data_inicio: string;
     data_fim?: string | null;
@@ -250,6 +251,7 @@ export function useSupabaseData() {
           nome_acao: data.nome_acao,
           categoria_id: data.categoria_id,
           instituicao_id: data.instituicao_id,
+          campanha_id: data.campanha_id || null,
           tipo_disparo: data.tipo_disparo,
           data_inicio: data.data_inicio,
           data_fim: data.data_fim || null,

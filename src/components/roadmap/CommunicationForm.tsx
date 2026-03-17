@@ -21,6 +21,7 @@ interface CommunicationFormProps {
     instituicoes: any[];
     personas: any[];
     canais: any[];
+    campanhas: any[];
     comunicacoes: ComunicacaoDetalhada[];
     loading: boolean;
     addPessoa: (nome: string) => Promise<any>;

@@ -53,6 +53,8 @@ export interface ComunicacaoDetalhada {
   categoria_id: string;
   instituicao: Instituicao;
   instituicao_id: string;
+  campanha: Campanha | null;
+  campanha_id: string | null;
   personas: Persona[];
   canais: Canal[];
 }

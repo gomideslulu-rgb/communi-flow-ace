@@ -79,6 +79,7 @@ export function useSupabaseData() {
         instituicoesResult,
         personasResult,
         canaisResult,
+        campanhasResult,
         comunicacoesResult
       ] = await Promise.all([
         supabase.from('pessoas').select('*'),
@@ -86,11 +87,13 @@ export function useSupabaseData() {
         supabase.from('instituicoes').select('*'),
         supabase.from('personas').select('*'),
         supabase.from('canais').select('*'),
+        supabase.from('campanhas').select('*'),
         supabase.from('comunicacoes').select(`
           *,
           pessoa:pessoas(*),
           categoria:categorias(*),
           instituicao:instituicoes(*),
+          campanha:campanhas(*),
           personas:comunicacao_personas(persona:personas(*)),
           canais:comunicacao_canais(canal:canais(*))
         `)

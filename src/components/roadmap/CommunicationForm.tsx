@@ -300,6 +300,20 @@ export function CommunicationForm({
       } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
     }
   };
+  const addCampanha = async () => {
+    if (newCampanha.trim()) {
+      try {
+        const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+          .from('campanhas').insert([{ nome: newCampanha.trim(), cor: newCampanhaCor }]).select().single();
+        if (error) throw error;
+        await supabaseData.refetch();
+        setNewCampanha('');
+        setShowCampanhaForm(false);
+        toast({ title: "Sucesso", description: "Campanha adicionada" });
+      } catch (e) { toast({ title: "Erro", description: "Não foi possível adicionar", variant: "destructive" }); }
+    }
+  };
+
   if (supabaseData.loading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }

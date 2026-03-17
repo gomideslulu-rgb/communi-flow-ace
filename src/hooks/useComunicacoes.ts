@@ -6,6 +6,7 @@ export interface ComunicacaoForm {
   nome_acao: string;
   categoria_id: string;
   instituicao_id: string;
+  campanha_id: string;
   persona_ids: string[];
   tipo_disparo: 'Pontual' | 'Régua Fechada' | 'Régua Aberta';
   data_inicio: string;

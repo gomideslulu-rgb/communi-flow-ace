@@ -71,6 +71,9 @@ export function CommunicationForm({
   const [showPersonaForm, setShowPersonaForm] = useState(false);
   const [newCanal, setNewCanal] = useState('');
   const [showCanalForm, setShowCanalForm] = useState(false);
+  const [newCampanha, setNewCampanha] = useState('');
+  const [newCampanhaCor, setNewCampanhaCor] = useState('#6b7280');
+  const [showCampanhaForm, setShowCampanhaForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editData, setEditData] = useState<ComunicacaoForm & { id: string } | null>(null);

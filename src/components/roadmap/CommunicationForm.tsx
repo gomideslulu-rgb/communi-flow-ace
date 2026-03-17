@@ -724,11 +724,20 @@ export function CommunicationForm({
                     <Input value={editData.nome_acao} onChange={e => setEditData({ ...editData, nome_acao: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria</Label>
+                    <Label>Produto</Label>
                     <Select value={editData.categoria_id} onValueChange={v => setEditData({ ...editData, categoria_id: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {supabaseData.categorias.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Campanha</Label>
+                    <Select value={editData.campanha_id} onValueChange={v => setEditData({ ...editData, campanha_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecionar campanha" /></SelectTrigger>
+                      <SelectContent>
+                        {supabaseData.campanhas.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>

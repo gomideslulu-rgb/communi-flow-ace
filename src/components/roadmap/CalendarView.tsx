@@ -422,7 +422,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                               transform: 'translateY(-50%)',
                                               zIndex: 20,
                                               height: isPontual ? '22px' : '10px',
-                                              backgroundColor: campanha.cor,
+                                              backgroundColor: getModalidadeColor(comunicacao.modalidades),
                                               borderRadius: isPontual ? '4px' : '3px',
                                               opacity: 0.9,
                                             }}

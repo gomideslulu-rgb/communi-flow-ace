@@ -26,7 +26,7 @@ export function RoadmapContainer({ visitorMode = false }: RoadmapContainerProps)
         <header className="flex justify-between items-start">
           {visitorMode && (
             <Button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/')}
               variant="outline"
               className="flex items-center gap-2"
             >

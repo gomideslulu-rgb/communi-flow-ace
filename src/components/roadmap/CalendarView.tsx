@@ -15,6 +15,18 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+const MODALIDADE_COLORS: Record<string, string> = {
+  'Ao Vivo': '#3b82f6',
+  'Presencial': '#10b981',
+  'Semi': '#f59e0b',
+  'Digital': '#8b5cf6',
+};
+
+function getModalidadeColor(modalidades: string[]): string {
+  if (!modalidades || modalidades.length === 0) return '#6b7280';
+  return MODALIDADE_COLORS[modalidades[0]] || '#6b7280';
+}
+
 function generateMonthList(): string[] {
   const months: string[] = [];
   for (let y = 2025; y <= 2026; y++) {

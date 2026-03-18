@@ -15,6 +15,18 @@ const MONTH_NAMES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+const MODALIDADE_COLORS: Record<string, string> = {
+  'Ao Vivo': '#3b82f6',
+  'Presencial': '#10b981',
+  'Semi': '#f59e0b',
+  'Digital': '#8b5cf6',
+};
+
+function getModalidadeColor(modalidades: string[]): string {
+  if (!modalidades || modalidades.length === 0) return '#6b7280';
+  return MODALIDADE_COLORS[modalidades[0]] || '#6b7280';
+}
+
 function generateMonthList(): string[] {
   const months: string[] = [];
   for (let y = 2025; y <= 2026; y++) {
@@ -229,6 +241,16 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
           <CardContent>
             <div className="space-y-4">
               <div>
+                <h4 className="font-medium mb-2">Modalidades</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(MODALIDADE_COLORS).map(([nome, cor]) => (
+                    <Badge key={nome} style={{ backgroundColor: cor, color: 'white' }}>
+                      {nome}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <h4 className="font-medium mb-2">Personas</h4>
                 <div className="flex flex-wrap gap-2">
                   {supabaseData.personas.map(persona => (
@@ -338,7 +360,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           <div
                             key={comunicacao.id}
                             className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden"
-                            style={{ borderLeft: `3px solid ${categoriaColor}` }}
+                            style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -400,7 +422,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                               transform: 'translateY(-50%)',
                                               zIndex: 20,
                                               height: isPontual ? '22px' : '10px',
-                                              backgroundColor: campanha.cor,
+                                              backgroundColor: getModalidadeColor(comunicacao.modalidades),
                                               borderRadius: isPontual ? '4px' : '3px',
                                               opacity: 0.9,
                                             }}
@@ -463,7 +485,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           <div
                             key={comunicacao.id}
                             className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden"
-                            style={{ borderLeft: `3px solid ${categoriaColor}` }}
+                            style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
                               <span className="text-[11px] text-foreground truncate">{comunicacao.nome_acao}</span>
@@ -486,7 +508,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                           transform: 'translateY(-50%)',
                                           zIndex: 20,
                                           height: '10px',
-                                          backgroundColor: categoriaColor,
+                                          backgroundColor: getModalidadeColor(comunicacao.modalidades),
                                           borderRadius: '3px',
                                           opacity: 0.9,
                                         }}

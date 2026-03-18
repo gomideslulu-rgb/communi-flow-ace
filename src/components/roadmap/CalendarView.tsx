@@ -508,7 +508,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                           transform: 'translateY(-50%)',
                                           zIndex: 20,
                                           height: '10px',
-                                          backgroundColor: categoriaColor,
+                                          backgroundColor: getModalidadeColor(comunicacao.modalidades),
                                           borderRadius: '3px',
                                           opacity: 0.9,
                                         }}

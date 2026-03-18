@@ -241,6 +241,16 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
           <CardContent>
             <div className="space-y-4">
               <div>
+                <h4 className="font-medium mb-2">Modalidades</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(MODALIDADE_COLORS).map(([nome, cor]) => (
+                    <Badge key={nome} style={{ backgroundColor: cor, color: 'white' }}>
+                      {nome}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <h4 className="font-medium mb-2">Personas</h4>
                 <div className="flex flex-wrap gap-2">
                   {supabaseData.personas.map(persona => (

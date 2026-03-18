@@ -445,8 +445,17 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                             <div><strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}</div>
                                             <div><strong>Tipo:</strong> {comunicacao.tipo_disparo}</div>
                                             <div><strong>Período:</strong> {comunicacao.data_inicio}{comunicacao.data_fim && comunicacao.data_fim !== comunicacao.data_inicio ? ` até ${comunicacao.data_fim}` : ''}</div>
-                                            <div><strong>Produto:</strong> {comunicacao.categoria?.nome}</div>
-                                            <div><strong>Campanha:</strong> {campanha.nome}</div>
+                                            <div><strong>Produto:</strong> {comunicacao.categoria?.nome || 'N/A'}</div>
+                                            <div><strong>Campanha:</strong> {comunicacao.campanha?.nome || 'N/A'}</div>
+                                            <div><strong>Instituição:</strong> {comunicacao.instituicao?.nome || 'N/A'}</div>
+                                            <div><strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
+                                            <div><strong>Modalidade:</strong> {(comunicacao.modalidades || []).join(', ') || 'N/A'}</div>
+                                            <div><strong>Safra:</strong> {(comunicacao.safras || []).join(', ') || 'N/A'}</div>
+                                            <div><strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
+                                            {comunicacao.repiques?.length > 0 && (
+                                              <div><strong>Repiques:</strong> {comunicacao.repiques.join(', ')}</div>
+                                            )}
+                                            <div><strong>Status:</strong> {comunicacao.ativo ? 'Ativo' : 'Inativo'}</div>
                                           </div>
                                         </TooltipContent>
                                       </Tooltip>

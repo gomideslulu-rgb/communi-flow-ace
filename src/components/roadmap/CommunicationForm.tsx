@@ -818,7 +818,7 @@ export function CommunicationForm({
                 <div className="space-y-2">
                   <Label>Modalidade</Label>
                   <div className="flex gap-4">
-                    {['Ao Vivo', 'Presencial', 'Semi'].map(mod => (
+                    {['Ao Vivo', 'Presencial', 'Semi', 'Digital'].map(mod => (
                       <div key={mod} className="flex items-center space-x-2">
                         <Checkbox
                           checked={editData.modalidades.includes(mod)}

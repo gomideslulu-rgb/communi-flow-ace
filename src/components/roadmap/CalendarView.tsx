@@ -267,6 +267,16 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
           <CardContent>
             <div className="space-y-4">
               <div>
+                <h4 className="font-medium mb-2">Produtos</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(PRODUTO_EMOJIS).filter(([k]) => k !== 'Pós-Graduação').map(([nome, emoji]) => (
+                    <Badge key={nome} variant="outline">
+                      {emoji} {nome}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <h4 className="font-medium mb-2">Modalidades</h4>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(MODALIDADE_COLORS).map(([nome, cor]) => (

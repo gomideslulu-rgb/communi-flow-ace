@@ -135,66 +135,85 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     .filter(c => !c.campanha_id)
     .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
 
+  // Helper to build a comparable date string YYYY-MM-DD
+  const toDateStr = (year: number, month: number, day: number) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
   // Check if a communication is active on a given day (covers the date range)
   const isComunicacaoActiveOnDay = (com: ComunicacaoDetalhada, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const targetDate = toDateStr(year, month, day);
+    const startDate = com.data_inicio;
     const endDate = com.data_fim || com.data_inicio;
-    return targetDate >= com.data_inicio && targetDate <= endDate;
+    return targetDate >= startDate && targetDate <= endDate;
+  };
+
+  // Check if the communication overlaps with the selected month at all
+  const isComunicacaoInMonth = (com: ComunicacaoDetalhada) => {
+    const { year, month } = parseMonth(selectedMonth);
+    const monthStart = toDateStr(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthEnd = toDateStr(year, month, daysInMonth);
+    const startDate = com.data_inicio;
+    const endDate = com.data_fim || com.data_inicio;
+    return startDate <= monthEnd && endDate >= monthStart;
   };
 
   // Get the span (number of remaining days) for a bar starting on `day`
   const getBarSpan = (com: ComunicacaoDetalhada, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const endDate = new Date(com.data_fim || com.data_inicio);
-    const currentDate = new Date(year, month, day);
-    const monthEnd = new Date(year, month + 1, 0);
-    const clampedEnd = endDate > monthEnd ? monthEnd : endDate;
-    return Math.max(1, Math.ceil((clampedEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const endDate = com.data_fim || com.data_inicio;
+    const monthEndStr = toDateStr(year, month, daysInMonth);
+    const clampedEnd = endDate > monthEndStr ? monthEndStr : endDate;
+    // Parse clamped end day
+    const endDay = parseInt(clampedEnd.split('-')[2], 10);
+    return Math.max(1, endDay - day + 1);
   };
 
   // Is this the first visible day of the bar in this month?
   const isFirstVisibleDay = (com: ComunicacaoDetalhada, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const currentDate = new Date(year, month, day);
-    const startDate = new Date(com.data_inicio);
-    const endDate = new Date(com.data_fim || com.data_inicio);
-    const isWithin = currentDate >= startDate && currentDate <= endDate;
-    if (!isWithin) return false;
-    if (day === 1) return true;
-    const prevDate = new Date(year, month, day - 1);
+    const targetDate = toDateStr(year, month, day);
+    const startDate = com.data_inicio;
+    const endDate = com.data_fim || com.data_inicio;
+    if (targetDate < startDate || targetDate > endDate) return false;
+    if (day === 1) return startDate <= targetDate;
+    const prevDate = toDateStr(year, month, day - 1);
     return prevDate < startDate;
   };
 
   // Marco helpers
   const getMarcoSpan = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const startDate = new Date(marco.data_inicio);
-    const endDate = new Date(marco.data_fim || marco.data_inicio);
-    const currentDate = new Date(year, month, day);
-    if (currentDate >= startDate && currentDate <= endDate) {
-      return Math.min(
-        Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-        days.length - day + 1
-      );
+    const targetDate = toDateStr(year, month, day);
+    const startDate = marco.data_inicio;
+    const endDate = marco.data_fim || marco.data_inicio;
+    if (targetDate >= startDate && targetDate <= endDate) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const monthEndStr = toDateStr(year, month, daysInMonth);
+      const clampedEnd = endDate > monthEndStr ? monthEndStr : endDate;
+      const endDay = parseInt(clampedEnd.split('-')[2], 10);
+      return Math.max(1, endDay - day + 1);
     }
     return 0;
   };
 
   const isMarcoFirstVisible = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const currentDate = new Date(year, month, day);
-    const prevDate = new Date(year, month, day - 1);
-    const startDate = new Date(marco.data_inicio);
-    const endDate = new Date(marco.data_fim || marco.data_inicio);
-    const isWithin = currentDate >= startDate && currentDate <= endDate;
-    return isWithin && (day === 1 || prevDate < startDate);
+    const targetDate = toDateStr(year, month, day);
+    const startDate = marco.data_inicio;
+    const endDate = marco.data_fim || marco.data_inicio;
+    if (targetDate < startDate || targetDate > endDate) return false;
+    if (day === 1) return startDate <= targetDate;
+    const prevDate = toDateStr(year, month, day - 1);
+    return prevDate < startDate;
   };
 
   // Conflict check
   const checkConflicts = (day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const targetDate = toDateStr(year, month, day);
     const marcosDoDay = marcos.filter(m => targetDate >= m.data_inicio && targetDate <= (m.data_fim || m.data_inicio));
     return { marcos: marcosDoDay };
   };

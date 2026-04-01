@@ -533,7 +533,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                             style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
-                              <span className="text-[11px] text-foreground truncate">{comunicacao.nome_acao}</span>
+                              <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}</span>
                             </div>
                             <div className="grid gap-0 relative" style={{
                               gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`

@@ -22,6 +22,18 @@ const MODALIDADE_COLORS: Record<string, string> = {
   'Digital': '#8b5cf6',
 };
 
+const PRODUTO_EMOJIS: Record<string, string> = {
+  'Graduação': '🎓',
+  'Pós-graduação': '🧑‍🎓',
+  'Pós-Graduação': '🧑‍🎓',
+  'Técnico': '🔧',
+};
+
+function getProductEmoji(produtoNome?: string): string {
+  if (!produtoNome) return '';
+  return PRODUTO_EMOJIS[produtoNome] || '';
+}
+
 function getModalidadeColor(modalidades: string[]): string {
   if (!modalidades || modalidades.length === 0) return '#6b7280';
   return MODALIDADE_COLORS[modalidades[0]] || '#6b7280';

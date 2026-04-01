@@ -22,6 +22,18 @@ const MODALIDADE_COLORS: Record<string, string> = {
   'Digital': '#8b5cf6',
 };
 
+const PRODUTO_EMOJIS: Record<string, string> = {
+  'Graduação': '🎓',
+  'Pós-graduação': '🧑‍🎓',
+  'Pós-Graduação': '🧑‍🎓',
+  'Técnico': '🔧',
+};
+
+function getProductEmoji(produtoNome?: string): string {
+  if (!produtoNome) return '';
+  return PRODUTO_EMOJIS[produtoNome] || '';
+}
+
 function getModalidadeColor(modalidades: string[]): string {
   if (!modalidades || modalidades.length === 0) return '#6b7280';
   return MODALIDADE_COLORS[modalidades[0]] || '#6b7280';
@@ -69,12 +81,13 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const { toast } = useToast();
   const meses = generateMonthList();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthLabel(meses));
-  const [filters, setFilters] = useState({ pessoa: 'Todos', categoria: 'Todos', campanha: 'Todos' });
+  const [filters, setFilters] = useState({ pessoa: 'Todos', categoria: 'Todos', campanha: 'Todos', persona: 'Todos' });
   const [refreshKey, setRefreshKey] = useState(0);
 
   const pessoas = ['Todos', ...supabaseData.pessoas.map(p => p.nome)];
   const categorias = ['Todos', ...supabaseData.categorias.map(c => c.nome)];
   const campanhasFilter = ['Todos', ...supabaseData.campanhas.map(c => c.nome)];
+  const personasFilter = ['Todos', ...supabaseData.personas.map(p => p.nome)];
 
   const handleDeleteComunicacao = async (comunicacaoId: string) => {
     try {
@@ -102,6 +115,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     if (filters.pessoa !== 'Todos' && c.pessoa?.nome !== filters.pessoa) return false;
     if (filters.categoria !== 'Todos' && c.categoria?.nome !== filters.categoria) return false;
     if (filters.campanha !== 'Todos' && c.campanha?.nome !== filters.campanha) return false;
+    if (filters.persona !== 'Todos') {
+      const hasPersona = (c.personas || []).some(p => p?.nome === filters.persona);
+      if (!hasPersona) return false;
+    }
     return true;
   });
 
@@ -194,7 +211,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Mês</label>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -231,6 +248,15 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Persona</label>
+                <Select value={filters.persona} onValueChange={value => setFilters(prev => ({ ...prev, persona: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {personasFilter.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -240,6 +266,16 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
           <CardHeader><CardTitle>Legendas</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Produtos</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(PRODUTO_EMOJIS).filter(([k]) => k !== 'Pós-Graduação').map(([nome, emoji]) => (
+                    <Badge key={nome} variant="outline">
+                      {emoji} {nome}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
               <div>
                 <h4 className="font-medium mb-2">Modalidades</h4>
                 <div className="flex flex-wrap gap-2">
@@ -359,14 +395,14 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         return (
                           <div
                             key={comunicacao.id}
-                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden"
+                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm"
                             style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
                                   <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao}>
-                                    {comunicacao.nome_acao}
+                                    {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}
                                   </span>
                                 </div>
                               </TooltipTrigger>
@@ -493,11 +529,11 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         return (
                           <div
                             key={comunicacao.id}
-                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden"
+                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm"
                             style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
-                              <span className="text-[11px] text-foreground truncate">{comunicacao.nome_acao}</span>
+                              <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}</span>
                             </div>
                             <div className="grid gap-0 relative" style={{
                               gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`

@@ -395,7 +395,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                         return (
                           <div
                             key={comunicacao.id}
-                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm overflow-hidden"
+                            className="grid grid-cols-[200px_1fr] gap-0 rounded-sm"
                             style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
                           >
                             <Tooltip>

@@ -115,6 +115,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     if (filters.pessoa !== 'Todos' && c.pessoa?.nome !== filters.pessoa) return false;
     if (filters.categoria !== 'Todos' && c.categoria?.nome !== filters.categoria) return false;
     if (filters.campanha !== 'Todos' && c.campanha?.nome !== filters.campanha) return false;
+    if (filters.persona !== 'Todos') {
+      const hasPersona = (c.personas || []).some(p => p?.nome === filters.persona);
+      if (!hasPersona) return false;
+    }
     return true;
   });
 

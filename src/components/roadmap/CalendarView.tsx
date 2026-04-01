@@ -402,7 +402,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                               <TooltipTrigger asChild>
                                 <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
                                   <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao}>
-                                    {comunicacao.nome_acao}
+                                    {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}
                                   </span>
                                 </div>
                               </TooltipTrigger>

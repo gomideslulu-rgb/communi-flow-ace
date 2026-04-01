@@ -186,32 +186,34 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   // Marco helpers
   const getMarcoSpan = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const startDate = new Date(marco.data_inicio);
-    const endDate = new Date(marco.data_fim || marco.data_inicio);
-    const currentDate = new Date(year, month, day);
-    if (currentDate >= startDate && currentDate <= endDate) {
-      return Math.min(
-        Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-        days.length - day + 1
-      );
+    const targetDate = toDateStr(year, month, day);
+    const startDate = marco.data_inicio;
+    const endDate = marco.data_fim || marco.data_inicio;
+    if (targetDate >= startDate && targetDate <= endDate) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const monthEndStr = toDateStr(year, month, daysInMonth);
+      const clampedEnd = endDate > monthEndStr ? monthEndStr : endDate;
+      const endDay = parseInt(clampedEnd.split('-')[2], 10);
+      return Math.max(1, endDay - day + 1);
     }
     return 0;
   };
 
   const isMarcoFirstVisible = (marco: Marco, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const currentDate = new Date(year, month, day);
-    const prevDate = new Date(year, month, day - 1);
-    const startDate = new Date(marco.data_inicio);
-    const endDate = new Date(marco.data_fim || marco.data_inicio);
-    const isWithin = currentDate >= startDate && currentDate <= endDate;
-    return isWithin && (day === 1 || prevDate < startDate);
+    const targetDate = toDateStr(year, month, day);
+    const startDate = marco.data_inicio;
+    const endDate = marco.data_fim || marco.data_inicio;
+    if (targetDate < startDate || targetDate > endDate) return false;
+    if (day === 1) return startDate <= targetDate;
+    const prevDate = toDateStr(year, month, day - 1);
+    return prevDate < startDate;
   };
 
   // Conflict check
   const checkConflicts = (day: number) => {
     const { year, month } = parseMonth(selectedMonth);
-    const targetDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const targetDate = toDateStr(year, month, day);
     const marcosDoDay = marcos.filter(m => targetDate >= m.data_inicio && targetDate <= (m.data_fim || m.data_inicio));
     return { marcos: marcosDoDay };
   };

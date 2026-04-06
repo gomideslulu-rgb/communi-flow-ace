@@ -140,9 +140,20 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   // Filter only communications active in the selected month
   const visibleComunicacoes = filteredComunicacoes.filter(c => isComunicacaoInMonth(c));
 
+  // Expand communications: one row per modalidade
+  type ExpandedComm = ComunicacaoDetalhada & { _modalidade: string; _expandedKey: string };
+  const expandedComunicacoes: ExpandedComm[] = visibleComunicacoes.flatMap(c => {
+    const mods = c.modalidades && c.modalidades.length > 0 ? c.modalidades : [''];
+    return mods.map(mod => ({
+      ...c,
+      _modalidade: mod,
+      _expandedKey: `${c.id}_${mod}`,
+    }));
+  });
+
   // Group by Produto (categoria) > Campanha
   const produtoGroups = supabaseData.categorias.map(categoria => {
-    const commsForProduto = visibleComunicacoes.filter(c => c.categoria_id === categoria.id);
+    const commsForProduto = expandedComunicacoes.filter(c => c.categoria_id === categoria.id);
     
     const campanhaSubGroups = supabaseData.campanhas.map(campanha => ({
       campanha,

@@ -606,6 +606,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                     )}
                   </div>
                 ))}
+              </div>
             </div>
           </CardContent>
         </Card>

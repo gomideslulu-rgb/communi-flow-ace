@@ -406,10 +406,206 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                   </div>
                 </div>
 
-                {/* Comunicações agrupadas por Campanha */}
-                {campanhaGroups.map(({ campanha, comunicacoes: comms }) => (
-                  <div key={campanha.id} className="mt-3">
-                    {/* Campanha Header */}
+                {/* Comunicações agrupadas por Produto > Campanha */}
+                {produtoGroups.map(({ categoria, campanhaSubGroups, semCampanha: semCampanhaProduto }) => (
+                  <div key={categoria.id} className="mt-4">
+                    {/* Produto Header */}
+                    <div className="grid grid-cols-[200px_1fr] gap-0 mb-[2px]">
+                      <div className="px-2 py-2 font-bold border text-xs rounded-tl-sm" style={{ backgroundColor: categoria.cor, color: 'white' }}>
+                        {getProductEmoji(categoria.nome)} {categoria.nome.toUpperCase()}
+                      </div>
+                      <div className="border-b-2" style={{ borderColor: categoria.cor }} />
+                    </div>
+
+                    {/* Campanha sub-groups */}
+                    {campanhaSubGroups.map(({ campanha, comunicacoes: comms }) => (
+                      <div key={campanha.id} className="ml-2 mt-1">
+                        <div className="grid grid-cols-[198px_1fr] gap-0 mb-[2px]">
+                          <div className="px-2 py-1 font-semibold border text-[11px] bg-muted/80" style={{ borderLeft: `3px solid ${campanha.cor}`, color: campanha.cor }}>
+                            {campanha.nome}
+                          </div>
+                          <div className="border-b" style={{ borderColor: campanha.cor + '40' }} />
+                        </div>
+
+                        <div className="space-y-[2px]">
+                          {comms.map((comunicacao) => (
+                            <div
+                              key={comunicacao.id}
+                              className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
+                              style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
+                                    <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao}>
+                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}
+                                    </span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs">
+                                  <div className="space-y-1 text-xs">
+                                    <div className="font-medium text-sm">{comunicacao.nome_acao}</div>
+                                    <div><strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}</div>
+                                    <div><strong>Tipo:</strong> {comunicacao.tipo_disparo}</div>
+                                    <div><strong>Período:</strong> {comunicacao.data_inicio}{comunicacao.data_fim && comunicacao.data_fim !== comunicacao.data_inicio ? ` até ${comunicacao.data_fim}` : ''}</div>
+                                    <div><strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ')}</div>
+                                    <div><strong>Produto:</strong> {comunicacao.categoria?.nome}</div>
+                                    <div><strong>Campanha:</strong> {comunicacao.campanha?.nome || 'N/A'}</div>
+                                    <div><strong>Instituição:</strong> {comunicacao.instituicao?.nome}</div>
+                                    {comunicacao.repiques?.length > 0 && (
+                                      <div><strong>Repiques:</strong> {comunicacao.repiques.join(', ')}</div>
+                                    )}
+                                    {(comunicacao.canais || []).length > 0 && (
+                                      <div><strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ')}</div>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-5 w-auto px-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10 mt-1"
+                                      onClick={(e) => { e.stopPropagation(); handleDeleteComunicacao(comunicacao.id); }}
+                                    >
+                                      <X className="h-3 w-3 mr-1" />
+                                      <span className="text-[10px]">Excluir</span>
+                                    </Button>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+
+                              <div className="grid gap-0 relative" style={{
+                                gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`
+                              }}>
+                                {days.map(day => {
+                                  const weekend = isWeekend(day);
+                                  const active = isComunicacaoActiveOnDay(comunicacao, day);
+                                  if (active && isFirstVisibleDay(comunicacao, day)) {
+                                    const span = getBarSpan(comunicacao, day);
+                                    const isPontual = comunicacao.tipo_disparo === 'Pontual' && (!comunicacao.data_fim || comunicacao.data_fim === comunicacao.data_inicio);
+                                    return (
+                                      <div key={day} className={`min-h-[28px] relative border-r border-border/20 ${weekend ? 'bg-muted/20' : ''}`}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div
+                                              className={`absolute left-0 flex items-center cursor-pointer ${isPontual ? 'justify-center' : ''}`}
+                                              style={{
+                                                width: isPontual ? '100%' : `${span * 100}%`,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                zIndex: 20,
+                                                height: isPontual ? '22px' : '10px',
+                                                backgroundColor: getModalidadeColor(comunicacao.modalidades),
+                                                borderRadius: isPontual ? '4px' : '3px',
+                                                opacity: 0.9,
+                                              }}
+                                            >
+                                              {!isPontual && span > 3 && (
+                                                <span className="text-white text-[9px] font-medium truncate px-2">
+                                                  {comunicacao.nome_acao}
+                                                </span>
+                                              )}
+                                              {isPontual && (
+                                                <span className="text-white text-[9px] font-bold">
+                                                  {comunicacao.tipo_disparo.charAt(0)}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="max-w-xs">
+                                            <div className="space-y-1 text-xs">
+                                              <div className="font-medium text-sm">{comunicacao.nome_acao}</div>
+                                              <div><strong>Responsável:</strong> {comunicacao.pessoa?.nome || 'N/A'}</div>
+                                              <div><strong>Tipo:</strong> {comunicacao.tipo_disparo}</div>
+                                              <div><strong>Período:</strong> {comunicacao.data_inicio}{comunicacao.data_fim && comunicacao.data_fim !== comunicacao.data_inicio ? ` até ${comunicacao.data_fim}` : ''}</div>
+                                              <div><strong>Produto:</strong> {comunicacao.categoria?.nome || 'N/A'}</div>
+                                              <div><strong>Campanha:</strong> {comunicacao.campanha?.nome || 'N/A'}</div>
+                                              <div><strong>Instituição:</strong> {comunicacao.instituicao?.nome || 'N/A'}</div>
+                                              <div><strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
+                                              <div><strong>Modalidade:</strong> {(comunicacao.modalidades || []).join(', ') || 'N/A'}</div>
+                                              <div><strong>Safra:</strong> {(comunicacao.safras || []).join(', ') || 'N/A'}</div>
+                                              <div><strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
+                                              {comunicacao.repiques?.length > 0 && (
+                                                <div><strong>Repiques:</strong> {comunicacao.repiques.join(', ')}</div>
+                                              )}
+                                              <div><strong>Status:</strong> {comunicacao.ativo ? 'Ativo' : 'Inativo'}</div>
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={day} className={`min-h-[28px] border-r border-border/20 ${weekend ? 'bg-muted/20' : ''}`} />
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Sem campanha dentro do produto */}
+                    {semCampanhaProduto.length > 0 && (
+                      <div className="ml-2 mt-1">
+                        <div className="grid grid-cols-[198px_1fr] gap-0 mb-[2px]">
+                          <div className="px-2 py-1 font-semibold border text-[11px] bg-muted/60 text-muted-foreground" style={{ borderLeft: '3px solid #9ca3af' }}>
+                            Sem Campanha
+                          </div>
+                          <div className="border-b border-muted" />
+                        </div>
+                        <div className="space-y-[2px]">
+                          {semCampanhaProduto.map((comunicacao) => (
+                            <div
+                              key={comunicacao.id}
+                              className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
+                              style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
+                            >
+                              <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
+                                <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}</span>
+                              </div>
+                              <div className="grid gap-0 relative" style={{
+                                gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`
+                              }}>
+                                {days.map(day => {
+                                  const weekend = isWeekend(day);
+                                  const active = isComunicacaoActiveOnDay(comunicacao, day);
+                                  if (active && isFirstVisibleDay(comunicacao, day)) {
+                                    const span = getBarSpan(comunicacao, day);
+                                    return (
+                                      <div key={day} className={`min-h-[28px] relative border-r border-border/20 ${weekend ? 'bg-muted/20' : ''}`}>
+                                        <div
+                                          className="absolute left-0 flex items-center cursor-pointer"
+                                          style={{
+                                            width: `${span * 100}%`,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            zIndex: 20,
+                                            height: '10px',
+                                            backgroundColor: getModalidadeColor(comunicacao.modalidades),
+                                            borderRadius: '3px',
+                                            opacity: 0.9,
+                                          }}
+                                        >
+                                          {span > 3 && (
+                                            <span className="text-white text-[9px] font-medium truncate px-2">
+                                              {comunicacao.nome_acao}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div key={day} className={`min-h-[28px] border-r border-border/20 ${weekend ? 'bg-muted/20' : ''}`} />
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
                     <div className="grid grid-cols-[200px_1fr] gap-0 mb-[2px]">
                       <div className="px-2 py-1.5 font-bold border text-xs rounded-tl-sm" style={{ backgroundColor: campanha.cor, color: 'white' }}>
                         {campanha.nome.toUpperCase()}

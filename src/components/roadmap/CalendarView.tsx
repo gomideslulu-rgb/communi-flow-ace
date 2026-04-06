@@ -122,18 +122,32 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     return true;
   });
 
-  // Group by campanha
-  const campanhaGroups = supabaseData.campanhas.map(campanha => ({
-    campanha,
-    comunicacoes: filteredComunicacoes
-      .filter(c => c.campanha_id === campanha.id)
-      .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao))
-  })).filter(g => g.comunicacoes.length > 0);
+  // Filter only communications active in the selected month
+  const visibleComunicacoes = filteredComunicacoes.filter(c => isComunicacaoInMonth(c));
 
-  // Communications without campanha
-  const semCampanha = filteredComunicacoes
-    .filter(c => !c.campanha_id)
-    .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
+  // Group by Produto (categoria) > Campanha
+  const produtoGroups = supabaseData.categorias.map(categoria => {
+    const commsForProduto = visibleComunicacoes.filter(c => c.categoria_id === categoria.id);
+    
+    // Sub-group by campanha
+    const campanhaSubGroups = supabaseData.campanhas.map(campanha => ({
+      campanha,
+      comunicacoes: commsForProduto
+        .filter(c => c.campanha_id === campanha.id)
+        .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao))
+    })).filter(g => g.comunicacoes.length > 0);
+
+    const semCampanha = commsForProduto
+      .filter(c => !c.campanha_id)
+      .sort((a, b) => a.nome_acao.localeCompare(b.nome_acao));
+
+    return {
+      categoria,
+      campanhaSubGroups,
+      semCampanha,
+      total: commsForProduto.length
+    };
+  }).filter(g => g.total > 0);
 
   // Helper to build a comparable date string YYYY-MM-DD
   const toDateStr = (year: number, month: number, day: number) =>

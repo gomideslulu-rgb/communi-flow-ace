@@ -562,14 +562,17 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                           <div className="border-b border-muted" />
                         </div>
                         <div className="space-y-[2px]">
-                          {semCampanhaProduto.map((comunicacao) => (
+                          {semCampanhaProduto.map((comunicacao) => {
+                            const modColor = MODALIDADE_COLORS[comunicacao._modalidade] || '#6b7280';
+                            const modLabel = comunicacao._modalidade ? ` (${comunicacao._modalidade})` : '';
+                            return (
                             <div
-                              key={comunicacao.id}
+                              key={comunicacao._expandedKey}
                               className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
-                              style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
+                              style={{ borderLeft: `3px solid ${modColor}` }}
                             >
                               <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
-                                <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}</span>
+                                <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}{modLabel}</span>
                               </div>
                               <div className="grid gap-0 relative" style={{
                                 gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`
@@ -589,7 +592,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                             transform: 'translateY(-50%)',
                                             zIndex: 20,
                                             height: '10px',
-                                            backgroundColor: getModalidadeColor(comunicacao.modalidades),
+                                            backgroundColor: modColor,
                                             borderRadius: '3px',
                                             opacity: 0.9,
                                           }}
@@ -609,7 +612,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 })}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}

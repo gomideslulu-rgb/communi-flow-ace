@@ -432,17 +432,20 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                       <div key={campanha.id} className="ml-2 mt-1">
 
                         <div className="space-y-[2px]">
-                          {comms.map((comunicacao) => (
+                          {comms.map((comunicacao) => {
+                            const modColor = MODALIDADE_COLORS[comunicacao._modalidade] || '#6b7280';
+                            const modLabel = comunicacao._modalidade ? ` (${comunicacao._modalidade})` : '';
+                            return (
                             <div
-                              key={comunicacao.id}
+                              key={comunicacao._expandedKey}
                               className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
-                              style={{ borderLeft: `3px solid ${getModalidadeColor(comunicacao.modalidades)}` }}
+                              style={{ borderLeft: `3px solid ${modColor}` }}
                             >
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
-                                    <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao}>
-                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}
+                                    <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao + modLabel}>
+                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}{modLabel}
                                     </span>
                                   </div>
                                 </TooltipTrigger>
@@ -456,6 +459,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                     <div><strong>Produto:</strong> {comunicacao.categoria?.nome}</div>
                                     <div><strong>Campanha:</strong> {comunicacao.campanha?.nome || 'N/A'}</div>
                                     <div><strong>Instituição:</strong> {comunicacao.instituicao?.nome}</div>
+                                    <div><strong>Modalidade:</strong> {comunicacao._modalidade || 'N/A'}</div>
                                     {comunicacao.repiques?.length > 0 && (
                                       <div><strong>Repiques:</strong> {comunicacao.repiques.join(', ')}</div>
                                     )}
@@ -496,7 +500,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                                 transform: 'translateY(-50%)',
                                                 zIndex: 20,
                                                 height: isPontual ? '22px' : '10px',
-                                                backgroundColor: getModalidadeColor(comunicacao.modalidades),
+                                                backgroundColor: modColor,
                                                 borderRadius: isPontual ? '4px' : '3px',
                                                 opacity: 0.9,
                                               }}
@@ -523,7 +527,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                               <div><strong>Campanha:</strong> {comunicacao.campanha?.nome || 'N/A'}</div>
                                               <div><strong>Instituição:</strong> {comunicacao.instituicao?.nome || 'N/A'}</div>
                                               <div><strong>Persona:</strong> {(comunicacao.personas || []).map(p => p?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
-                                              <div><strong>Modalidade:</strong> {(comunicacao.modalidades || []).join(', ') || 'N/A'}</div>
+                                              <div><strong>Modalidade:</strong> {comunicacao._modalidade || 'N/A'}</div>
                                               <div><strong>Safra:</strong> {(comunicacao.safras || []).join(', ') || 'N/A'}</div>
                                               <div><strong>Canais:</strong> {(comunicacao.canais || []).map(c => c?.nome).filter(Boolean).join(', ') || 'N/A'}</div>
                                               {comunicacao.repiques?.length > 0 && (
@@ -542,7 +546,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                                 })}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}

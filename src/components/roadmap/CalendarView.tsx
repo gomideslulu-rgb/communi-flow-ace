@@ -419,12 +419,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                     {/* Campanha sub-groups */}
                     {campanhaSubGroups.map(({ campanha, comunicacoes: comms }) => (
                       <div key={campanha.id} className="ml-2 mt-1">
-                        <div className="grid grid-cols-[198px_1fr] gap-0 mb-[2px]">
-                          <div className="px-2 py-1 font-semibold border text-[11px] bg-muted/80" style={{ borderLeft: `3px solid ${campanha.cor}`, color: campanha.cor }}>
-                            {campanha.nome}
-                          </div>
-                          <div className="border-b" style={{ borderColor: campanha.cor + '40' }} />
-                        </div>
 
                         <div className="space-y-[2px]">
                           {comms.map((comunicacao) => (

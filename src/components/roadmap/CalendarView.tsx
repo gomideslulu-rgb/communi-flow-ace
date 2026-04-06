@@ -122,6 +122,21 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     return true;
   });
 
+  // Helper to build a comparable date string YYYY-MM-DD
+  const toDateStr = (year: number, month: number, day: number) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  // Check if the communication overlaps with the selected month at all
+  const isComunicacaoInMonth = (com: ComunicacaoDetalhada) => {
+    const { year, month } = parseMonth(selectedMonth);
+    const monthStart = toDateStr(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthEnd = toDateStr(year, month, daysInMonth);
+    const startDate = com.data_inicio;
+    const endDate = com.data_fim || com.data_inicio;
+    return startDate <= monthEnd && endDate >= monthStart;
+  };
+
   // Filter only communications active in the selected month
   const visibleComunicacoes = filteredComunicacoes.filter(c => isComunicacaoInMonth(c));
 
@@ -129,7 +144,6 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
   const produtoGroups = supabaseData.categorias.map(categoria => {
     const commsForProduto = visibleComunicacoes.filter(c => c.categoria_id === categoria.id);
     
-    // Sub-group by campanha
     const campanhaSubGroups = supabaseData.campanhas.map(campanha => ({
       campanha,
       comunicacoes: commsForProduto
@@ -149,28 +163,13 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
     };
   }).filter(g => g.total > 0);
 
-  // Helper to build a comparable date string YYYY-MM-DD
-  const toDateStr = (year: number, month: number, day: number) =>
-    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-  // Check if a communication is active on a given day (covers the date range)
+  // Check if a communication is active on a given day
   const isComunicacaoActiveOnDay = (com: ComunicacaoDetalhada, day: number) => {
     const { year, month } = parseMonth(selectedMonth);
     const targetDate = toDateStr(year, month, day);
     const startDate = com.data_inicio;
     const endDate = com.data_fim || com.data_inicio;
     return targetDate >= startDate && targetDate <= endDate;
-  };
-
-  // Check if the communication overlaps with the selected month at all
-  const isComunicacaoInMonth = (com: ComunicacaoDetalhada) => {
-    const { year, month } = parseMonth(selectedMonth);
-    const monthStart = toDateStr(year, month, 1);
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const monthEnd = toDateStr(year, month, daysInMonth);
-    const startDate = com.data_inicio;
-    const endDate = com.data_fim || com.data_inicio;
-    return startDate <= monthEnd && endDate >= monthStart;
   };
 
   // Get the span (number of remaining days) for a bar starting on `day`

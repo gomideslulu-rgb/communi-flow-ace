@@ -443,10 +443,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                             >
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
-                                    <span className="text-[11px] text-foreground truncate" title={`${comunicacao.categoria?.nome || ''} > ${comunicacao.campanha?.nome || 'N/A'} > ${comunicacao.nome_acao}${modLabel}`}>
-                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome} {'>'} {comunicacao.campanha?.nome || 'N/A'} {'>'} {comunicacao.nome_acao}{modLabel}
-                                    </span>
+                                  <div className="bg-muted/50 px-1.5 py-1 font-medium border border-l-0 flex flex-col justify-center min-h-[44px] cursor-pointer gap-0">
+                                    <span className="text-[10px] text-muted-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome}</span>
+                                    <span className="text-[10px] text-muted-foreground/80 truncate pl-2">› {comunicacao.campanha?.nome || 'N/A'}</span>
+                                    <span className="text-[11px] text-foreground font-semibold truncate pl-4">{comunicacao.nome_acao}{modLabel}</span>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="right" className="max-w-xs">
@@ -571,8 +571,10 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                               className="grid grid-cols-[298px_1fr] gap-0 rounded-sm"
                               style={{ borderLeft: `3px solid ${modColor}` }}
                             >
-                              <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
-                                <span className="text-[11px] text-foreground truncate" title={`${comunicacao.categoria?.nome || ''} > Sem Campanha > ${comunicacao.nome_acao}${modLabel}`}>{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome} {'>'} Sem Campanha {'>'} {comunicacao.nome_acao}{modLabel}</span>
+                              <div className="bg-muted/50 px-1.5 py-1 font-medium border border-l-0 flex flex-col justify-center min-h-[44px] gap-0">
+                                <span className="text-[10px] text-muted-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome}</span>
+                                <span className="text-[10px] text-muted-foreground/80 truncate pl-2">› Sem Campanha</span>
+                                <span className="text-[11px] text-foreground font-semibold truncate pl-4">{comunicacao.nome_acao}{modLabel}</span>
                               </div>
                               <div className="grid gap-0 relative" style={{
                                 gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`

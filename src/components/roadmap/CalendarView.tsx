@@ -444,8 +444,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px] cursor-pointer">
-                                    <span className="text-[11px] text-foreground truncate" title={comunicacao.nome_acao + modLabel}>
-                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}{modLabel}
+                                    <span className="text-[11px] text-foreground truncate" title={`${comunicacao.categoria?.nome || ''} > ${comunicacao.campanha?.nome || 'N/A'} > ${comunicacao.nome_acao}${modLabel}`}>
+                                      {getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome} {'>'} {comunicacao.campanha?.nome || 'N/A'} {'>'} {comunicacao.nome_acao}{modLabel}
                                     </span>
                                   </div>
                                 </TooltipTrigger>
@@ -572,7 +572,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                               style={{ borderLeft: `3px solid ${modColor}` }}
                             >
                               <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
-                                <span className="text-[11px] text-foreground truncate">{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.nome_acao}{modLabel}</span>
+                                <span className="text-[11px] text-foreground truncate" title={`${comunicacao.categoria?.nome || ''} > Sem Campanha > ${comunicacao.nome_acao}${modLabel}`}>{getProductEmoji(comunicacao.categoria?.nome)} {comunicacao.categoria?.nome} {'>'} Sem Campanha {'>'} {comunicacao.nome_acao}{modLabel}</span>
                               </div>
                               <div className="grid gap-0 relative" style={{
                                 gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`

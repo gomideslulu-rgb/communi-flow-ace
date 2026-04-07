@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Calendar, AlertTriangle, X } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calendar, AlertTriangle, X, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Marco } from '@/hooks/useMarcos';
 import type { ComunicacaoDetalhada } from '@/hooks/useSupabaseData';

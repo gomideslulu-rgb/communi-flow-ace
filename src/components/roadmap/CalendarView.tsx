@@ -358,8 +358,8 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
             <div className="overflow-x-auto">
               <div className="min-w-[800px]">
                 {/* Header */}
-                <div className="grid grid-cols-[200px_1fr] gap-0 mb-2">
-                  <div className="bg-muted p-2 font-medium border text-xs">AÇÃO</div>
+                <div className="grid grid-cols-[300px_1fr] gap-0 mb-2">
+                  <div className="bg-muted p-2 font-medium border text-xs">PRODUTO {'>'} CAMPANHA {'>'} AÇÃO</div>
                   <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))` }}>
                     {days.map(day => (
                       <div key={day} className={`p-1 text-center text-[10px] font-medium border ${isWeekend(day) ? 'bg-muted/60 text-muted-foreground' : 'bg-background'}`}>
@@ -370,7 +370,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                 </div>
 
                 {/* Marcos */}
-                <div className="grid grid-cols-[200px_1fr] gap-0 mb-2">
+                <div className="grid grid-cols-[300px_1fr] gap-0 mb-2">
                   <div className="bg-blue-50 p-2 font-medium border text-blue-700 text-xs">MARCOS</div>
                   <div className="grid gap-0 relative" style={{
                     gridTemplateColumns: `repeat(${days.length}, minmax(32px, 1fr))`,
@@ -438,7 +438,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                             return (
                             <div
                               key={comunicacao._expandedKey}
-                              className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
+                              className="grid grid-cols-[298px_1fr] gap-0 rounded-sm"
                               style={{ borderLeft: `3px solid ${modColor}` }}
                             >
                               <Tooltip>
@@ -555,7 +555,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                     {/* Sem campanha dentro do produto */}
                     {semCampanhaProduto.length > 0 && (
                       <div className="ml-2 mt-1">
-                        <div className="grid grid-cols-[198px_1fr] gap-0 mb-[2px]">
+                        <div className="grid grid-cols-[298px_1fr] gap-0 mb-[2px]">
                           <div className="px-2 py-1 font-semibold border text-[11px] bg-muted/60 text-muted-foreground" style={{ borderLeft: '3px solid #9ca3af' }}>
                             Sem Campanha
                           </div>
@@ -568,7 +568,7 @@ export function CalendarView({ marcos, supabaseData }: CalendarViewProps) {
                             return (
                             <div
                               key={comunicacao._expandedKey}
-                              className="grid grid-cols-[198px_1fr] gap-0 rounded-sm"
+                              className="grid grid-cols-[298px_1fr] gap-0 rounded-sm"
                               style={{ borderLeft: `3px solid ${modColor}` }}
                             >
                               <div className="bg-muted/50 px-2 py-1 font-medium border border-l-0 flex items-center min-h-[28px]">
